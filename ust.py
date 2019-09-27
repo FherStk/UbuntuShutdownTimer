@@ -8,12 +8,13 @@
 import pyautogui
 import threading
 import datetime
+import sys
 import os
 
 #TODO: the shutdown times should be in a list
 #TODO: config files with schedule times, temeouts, etc.
 now = datetime.datetime.now()
-shd_time = datetime.datetime(now.year, now.month, now.day, 17,41,0)
+shd_time = datetime.datetime(now.year, now.month, now.day, 17,55,0)
 wrn_time = shd_time - datetime.timedelta(minutes=5)
 polling = 5 #the timers will poll every x sencds.
 
@@ -25,7 +26,8 @@ def shutdownTimer():
     shd_timer = threading.Timer(polling, shutdownTimer) #every minute
 
     if now.hour == shd_time.hour and now.minute == shd_time.minute:        
-        os.system('systemctl poweroff') 
+        #os.system('systemctl poweroff') 
+        print("Shutting down!")
 
     else:            
        shd_timer.start()   
@@ -55,3 +57,4 @@ if __name__ == "__main__":
     wrn_thread.start()
     wrn_thread.join()
     
+    sys.exit(0)
