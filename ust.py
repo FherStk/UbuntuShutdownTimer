@@ -12,25 +12,23 @@ import os
 
 #TODO: the shutdown times should be in a list
 debug = 1
-SHUTDOWN_TIME = "13:44:00"
-WARNING__BEFORE_SHUTDOWN = 1 #in minutes
+SHUTDOWN_TIMES = ["13:53:00", "13:54:00"]
+WARNING_BEFORE_SHUTDOWN = 1 #in minutes
 
 def shutdownTimer():    
     if(debug == 1): print("Shutting down!")
     #os.system('systemctl poweroff')     
 
 def warningTimer(shd_time): 
-    if(debug == 1): print("Warning timer rised up, setting up the shutdown timer:", end=' ')         
+    if(debug == 1): print("Warning timer rised up, setting up the shutdown timer:")         
 
     wait = (shd_time - datetime.datetime.now()).total_seconds()
     shd_timer = threading.Timer(wait, shutdownTimer)  
     shd_timer.start()     
     
-    if(debug == 1): 
-        print("OK")
-        print("     The shutdown event has been scheduled to rise up at %s" % shd_time.strftime('%H:%M'), end='\n\n')
+    if(debug == 1): print("     The shutdown event has been scheduled to rise up at %s" % shd_time.strftime('%H:%M:%S'), end='\n\n')
 
-    action = pyautogui.confirm(text='Aquest ordinador s''apagarà automàticament a les %s' % shd_time.strftime('%H:%M'), title='Apagada automàtica', buttons=['Anul·la l''apagada automàtica'])  # returns "OK" or "Cancel"        
+    action = pyautogui.confirm(text='Aquest ordinador s''apagarà automàticament a les %s' % shd_time.strftime('%H:%M:%S'), title='Apagada automàtica', buttons=['Anul·la l''apagada automàtica'])  # returns "OK" or "Cancel"        
     
     if action != None:
         shd_timer.cancel()
@@ -46,24 +44,22 @@ if __name__ == "__main__":
         print("Under the GNU General Public License v3.0")
         print("https://github.com/FherStk/UbuntuShutdownTimer", end='\n\n')        
 
-    if(debug == 1): print("Loading data:", end=' ')
+    if(debug == 1): print("Setting up the warning timers:")
     now = datetime.datetime.now()
-    today = datetime.datetime.now()
-    shd_time = datetime.datetime.strptime(SHUTDOWN_TIME, '%H:%M:%S').replace(year=now.year, month=now.month, day=now.day)
-    wrn_time = shd_time - datetime.timedelta(minutes = WARNING__BEFORE_SHUTDOWN)
-    if(debug == 1): print("OK")
+    
+    for sdt in SHUTDOWN_TIMES:
+        shd_time = datetime.datetime.strptime(sdt, '%H:%M:%S').replace(year=now.year, month=now.month, day=now.day)
+        wrn_time = shd_time - datetime.timedelta(minutes = WARNING_BEFORE_SHUTDOWN)        
 
-    #wait till warning time
-    if(debug == 1): print("Setting up the warning timer:", end=' ')
-    if(wrn_time > datetime.datetime.now()):
-        wait = (wrn_time - datetime.datetime.now()).total_seconds()
-        wrn_timer = threading.Timer(wait, warningTimer, [shd_time])
-        wrn_timer.start()    
+        #wait till warning time for each warning requested (a warning is a shutdown requested time - x minutes)        
+        if(wrn_time > datetime.datetime.now()):
+            wait = (wrn_time - datetime.datetime.now()).total_seconds()
+            wrn_timer = threading.Timer(wait, warningTimer, [shd_time])
+            wrn_timer.start()    
 
-        if(debug == 1): 
-            print("OK")
-            print("     The warning message has been scheduled to popup at %s" % wrn_time.strftime('%H:%M'), end='\n\n')
-        
-    elif(debug == 1): 
-        print("ERROR")
-        print("     The warning time has passed, so no automated shutdown will be scheduled.", end='\n\n')
+            if(debug == 1): print("     A new warning message has been scheduled to popup at %s" % wrn_time.strftime('%H:%M:%S'))
+            
+        elif(debug == 1): 
+            print("     A warning message has been ignored due its schedule time has passed at %s" % wrn_time.strftime('%H:%M:%S'))
+
+    print("")
