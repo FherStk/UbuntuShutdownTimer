@@ -1,5 +1,5 @@
 #source: https://www.devdungeon.com/content/dialog-boxes-python
-#        https://www.geeksforgeeks.org/timer-objects-pythonç/
+#        https://www.geeksforgeeks.org/timer-objects-python/
 #        https://realpython.com/intro-to-python-threading/
 
 #dependencies: pip3 install pyautogui
@@ -13,11 +13,9 @@ import os
 #TODO: the shutdown times should be in a list
 #TODO: config files with schedule times, temeouts, etc.
 now = datetime.datetime.now()
-shd_time = datetime.datetime(now.year, now.month, now.day, 13,23,0)
+shd_time = datetime.datetime(now.year, now.month, now.day, 13,26)
 wrn_time = shd_time - datetime.timedelta(minutes=1)
 debug = 1
-
-polling = 5 #the timers will poll every x sencds.
 
 def shutdownTimer():    
     if(debug == 1): print("Shutting down!")
@@ -64,5 +62,3 @@ if __name__ == "__main__":
     elif(debug == 1): 
         print("ERROR")
         print("     The warning time has passed, so no automated shutdown will be scheduled.", end='\n\n')
-
-    
