@@ -11,17 +11,15 @@ import datetime
 import os
 
 #TODO: the shutdown times should be in a list
-#TODO: config files with schedule times, temeouts, etc.
-now = datetime.datetime.now()
-shd_time = datetime.datetime(now.year, now.month, now.day, 13,26)
-wrn_time = shd_time - datetime.timedelta(minutes=1)
 debug = 1
+SHUTDOWN_TIME = "13:44:00"
+WARNING__BEFORE_SHUTDOWN = 1 #in minutes
 
 def shutdownTimer():    
     if(debug == 1): print("Shutting down!")
     #os.system('systemctl poweroff')     
 
-def warningTimer(): 
+def warningTimer(shd_time): 
     if(debug == 1): print("Warning timer rised up, setting up the shutdown timer:", end=' ')         
 
     wait = (shd_time - datetime.datetime.now()).total_seconds()
@@ -48,11 +46,18 @@ if __name__ == "__main__":
         print("Under the GNU General Public License v3.0")
         print("https://github.com/FherStk/UbuntuShutdownTimer", end='\n\n')        
 
+    if(debug == 1): print("Loading data:", end=' ')
+    now = datetime.datetime.now()
+    today = datetime.datetime.now()
+    shd_time = datetime.datetime.strptime(SHUTDOWN_TIME, '%H:%M:%S').replace(year=now.year, month=now.month, day=now.day)
+    wrn_time = shd_time - datetime.timedelta(minutes = WARNING__BEFORE_SHUTDOWN)
+    if(debug == 1): print("OK")
+
     #wait till warning time
     if(debug == 1): print("Setting up the warning timer:", end=' ')
     if(wrn_time > datetime.datetime.now()):
         wait = (wrn_time - datetime.datetime.now()).total_seconds()
-        wrn_timer = threading.Timer(wait, warningTimer)
+        wrn_timer = threading.Timer(wait, warningTimer, [shd_time])
         wrn_timer.start()    
 
         if(debug == 1): 
