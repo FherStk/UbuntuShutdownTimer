@@ -12,8 +12,8 @@ import time
 import os
 
 debug = 1
-SHUTDOWN_TIMES = [{"time": "16:35:00", "popup": True}]
-WARNING_BEFORE_SHUTDOWN = 1 #in minutes
+SHUTDOWN_TIMES = [{"time": "14:55:00", "popup": True}, {"time": "21:30:00", "popup": False}]
+WARNING_BEFORE_SHUTDOWN = 15 #in minutes
 
 def shutdown():    
     if(debug == 1): print("Shutting down!")
