@@ -8,16 +8,16 @@
 import pyautogui
 import threading
 import datetime
+import time
 import os
 
-#TODO: the shutdown times should be in a list
 debug = 1
-SHUTDOWN_TIMES = ["13:53:00", "13:54:00"]
+SHUTDOWN_TIMES = ["15:50:00", "15:51:00"]
 WARNING_BEFORE_SHUTDOWN = 1 #in minutes
 
 def shutdownTimer():    
     if(debug == 1): print("Shutting down!")
-    os.system('systemctl poweroff')     
+    #os.system('systemctl poweroff')     
 
 def warningTimer(shd_time): 
     if(debug == 1): print("Warning timer rised up, setting up the shutdown timer:")         
@@ -36,8 +36,6 @@ def warningTimer(shd_time):
         pyautogui.alert(text='Si us plau, recordi apagar l''ordinador manualment quan acabi de fer-lo servir. Gràcies. ', title='Recordatori', button='OK')                
 
 if __name__ == "__main__":
-    #TODO: send the shutdown time to the threads, once finished load the next one
-
     if(debug == 1): 
         print("Ubuntu Shutdown Timer (v0.0.0.1)")
         print("Copyright (C) Fernando Porrino Serrano")
@@ -53,13 +51,12 @@ if __name__ == "__main__":
 
         #wait till warning time for each warning requested (a warning is a shutdown requested time - x minutes)        
         if(wrn_time > datetime.datetime.now()):
+            if(debug == 1): print("     A new warning message has been scheduled to popup at %s" % wrn_time.strftime('%H:%M:%S'), end='\n\n')
             wait = (wrn_time - datetime.datetime.now()).total_seconds()
-            wrn_timer = threading.Timer(wait, warningTimer, [shd_time])
-            wrn_timer.start()    
-
-            if(debug == 1): print("     A new warning message has been scheduled to popup at %s" % wrn_time.strftime('%H:%M:%S'))
+            time.sleep(wait)
+            warningTimer(shd_time)
             
         elif(debug == 1): 
             print("     A warning message has been ignored due its schedule time has passed at %s" % wrn_time.strftime('%H:%M:%S'))
-
-    print("")
+    
+    print("")    
