@@ -11,13 +11,8 @@ import datetime
 import time
 import os
 
-class Appointment:
-  def __init__(self, time, popup):
-    self.time = time
-    self.popup = popup
-
 debug = 1
-SHUTDOWN_TIMES = [Appointment("14:55:00", True), Appointment("21:30:00", False)]
+SHUTDOWN_TIMES = [{"time": "16:35:00", "popup": True}]
 WARNING_BEFORE_SHUTDOWN = 1 #in minutes
 
 def shutdown():    
@@ -53,7 +48,7 @@ def main():
     now = datetime.datetime.now()
     
     for sdt in SHUTDOWN_TIMES:
-        shd_time = datetime.datetime.strptime(sdt.time, '%H:%M:%S').replace(year=now.year, month=now.month, day=now.day)
+        shd_time = datetime.datetime.strptime(sdt["time"], '%H:%M:%S').replace(year=now.year, month=now.month, day=now.day)
         wrn_time = shd_time - datetime.timedelta(minutes = WARNING_BEFORE_SHUTDOWN)        
 
         #wait till warning time for each warning requested (a warning is a shutdown requested time - x minutes)        
@@ -61,7 +56,7 @@ def main():
             if(debug == 1): print("     A new warning message has been scheduled to popup at %s" % wrn_time.strftime('%H:%M:%S'), end='\n\n')
             wait = (wrn_time - datetime.datetime.now()).total_seconds()
             time.sleep(wait)
-            warningTimer(shd_time, sdt.popup)
+            warningTimer(shd_time, sdt["popup"])
             
         elif(debug == 1): 
             print("     A warning message has been ignored due its schedule time has passed at %s" % wrn_time.strftime('%H:%M:%S')) 
