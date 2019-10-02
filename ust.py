@@ -11,8 +11,8 @@ import time
 import os
 
 debug = 1
-SHUTDOWN_TIMES = [{"time": "14:55:00", "popup": True}, {"time": "21:30:00", "popup": False}]
-WARNING_BEFORE_SHUTDOWN = 15 #in minutes
+SHUTDOWN_TIMES = [{"time": "16:48:30", "popup": True}, {"time": "21:30:00", "popup": False}]
+WARNING_BEFORE_SHUTDOWN = 1 #in minutes
 
 def shutdown():    
     if(debug == 1): print("Shutting down!")
@@ -35,9 +35,10 @@ def warningTimer(shd_time, popup):
     if(debug == 1): print("     The shutdown event has been scheduled to rise up at %s" % shd_time.strftime('%H:%M:%S'))
     if(not popup and debug == 1): print("     No warning popup will be displayed.", end='\n\n')
     elif(popup):
-        if(debug == 1): print("     Displaying warning popup.")
-        
-        if(GUI):
+                
+        if(not GUI and debug): print("     No GUI has been loaded, so no warning message will prompt.", end='\n\n')
+        elif(GUI):
+            if(debug == 1): print("     Displaying warning popup.")
             action = pyautogui.confirm(text='Aquest ordinador s''apagarà automàticament a les %s' % shd_time.strftime('%H:%M:%S'), title='Apagada automàtica', buttons=['Anul·la l''apagada automàtica'])  # returns "OK" or "Cancel"        
             
             if action != None:
