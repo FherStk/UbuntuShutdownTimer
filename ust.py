@@ -38,7 +38,7 @@ def warningTimer(shd_time, popup):
     print("     The warning event raised up, so a new shutdown event will be scheduled:")
     print("         Time:             %s" % shd_time.strftime('%H:%M:%S'))                
     print("         GUI loaded:       %s" % GUI)
-    print("         Popup requested : %s" % popup)
+    print("         Popup requested : %s" % popup, end='\n\n')
     
     if(popup == Popup.SILENT or not GUI): print("     No warning message will be prompted so the shutdown event will raise on silent mode.", end='\n\n')
     else:         
