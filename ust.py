@@ -75,12 +75,12 @@ def main():
 
         #wait till warning time for each warning requested (a warning is a shutdown requested time - x minutes)        
         if(wrn_time > datetime.datetime.now()):
-            print("     A new warning message has been scheduled to popup at %s" % wrn_time.strftime('%H:%M:%S'), end='\n\n')
+            print("     A new warning event has been scheduled to rise up at %s" % wrn_time.strftime('%H:%M:%S'), end='\n\n')
             wait = (wrn_time - datetime.datetime.now()).total_seconds()
             time.sleep(wait)
             warningTimer(shd_time, sdt["popup"])
                     
-        print("     A warning message has been ignored due its schedule time has passed at %s" % wrn_time.strftime('%H:%M:%S')) 
+        print("     A warning event has been ignored due its schedule time has passed at %s" % wrn_time.strftime('%H:%M:%S')) 
 
 if __name__ == "__main__":
     main()
