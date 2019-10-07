@@ -16,20 +16,23 @@ class Popup(Enum):
     INFO=1      #only informative, no abort option
     SILENT=0    #no warning will be displayed
 
-SHUTDOWN_TIMES = [{"time": "16:48:30", "popup": Popup.ABORT}, {"time": "21:30:00", "popup": Popup.INFO}, {"time": "21:30:00", "popup": Popup.SILENT}]
+SHUTDOWN_TIMES = [{"time": "16:12:00", "popup": Popup.ABORT}]
 WARNING_BEFORE_SHUTDOWN = 1 #in minutes
 
 def shutdown():    
     print("Shutting down!")
     #os.system('systemctl poweroff')     
 
-def warningTimer(shd_time, popup): 
-    #The pyautogui library only loads correctly once the GUI becomes ready, otherwise it will rise an exception
-    try:        
-        GUI = True
-        import pyautogui
-    except ImportError:
+def warningTimer(shd_time, popup):     
+    GUI = True
+    GUIException = ""
+    
+    try:                
+        #The pyautogui library only loads correctly once the GUI becomes ready, otherwise it will rise an exception
+        import pyautogui        
+    except Exception as e:
         GUI = False
+        GUIException = e
     
     wait = (shd_time - datetime.datetime.now()).total_seconds()
     shd_timer = threading.Timer(wait, shutdown)  
@@ -37,9 +40,11 @@ def warningTimer(shd_time, popup):
 
     print("     The warning event raised up, so a new shutdown event will be scheduled:")
     print("         Time:             %s" % shd_time.strftime('%H:%M:%S'))                
-    print("         GUI loaded:       %s" % GUI)
-    print("         Popup requested : %s" % popup, end='\n\n')
-    
+    print("         Popup requested : %s" % popup)
+    print("         GUI loaded:       %s" % GUI, end='')        
+    if(GUI): print("", end='\n\n')
+    else: print(" (%s)" % GUIException, end='\n\n')
+        
     if(popup == Popup.SILENT or not GUI): print("     No warning message will be prompted so the shutdown event will raise on silent mode.", end='\n\n')
     else:         
         print("     Displaying warning popup, so the user will be able to abort the shutdown on demand.")
