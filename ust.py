@@ -21,7 +21,7 @@ WARNING_BEFORE_SHUTDOWN = 1 #in minutes
 
 def shutdown():    
     print("Shutting down!")
-    os.system('systemctl poweroff')     
+    #os.system('systemctl poweroff')     
 
 def warningTimer(shd_time, popup):     
     GUI = True
