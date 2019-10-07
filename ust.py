@@ -16,7 +16,7 @@ class Popup(Enum):
     INFO=1      #only informative, no abort option
     SILENT=0    #no warning will be displayed
 
-SHUTDOWN_TIMES = [{"time": "16:12:00", "popup": Popup.ABORT}]
+SHUTDOWN_TIMES = [{"time": "16:28:00", "popup": Popup.ABORT}]
 WARNING_BEFORE_SHUTDOWN = 1 #in minutes
 
 def shutdown():    
@@ -39,15 +39,15 @@ def warningTimer(shd_time, popup):
     shd_timer.start()     
 
     print("     The warning event raised up, so a new shutdown event will be scheduled:")
-    print("         Time:             %s" % shd_time.strftime('%H:%M:%S'))                
-    print("         Popup requested : %s" % popup)
-    print("         GUI loaded:       %s" % GUI, end='')        
+    print("         Time:       %s" % shd_time.strftime('%H:%M:%S'))                
+    print("         Popup:      %s" % popup)
+    print("         GUI loaded: %s" % GUI, end='')        
     if(GUI): print("", end='\n\n')
     else: print(" (%s)" % GUIException, end='\n\n')
         
     if(popup == Popup.SILENT or not GUI): print("     No warning message will be prompted so the shutdown event will raise on silent mode.", end='\n\n')
     else:         
-        print("     Displaying warning popup, so the user will be able to abort the shutdown on demand.")
+        print("     Displaying the warning popup, so the user will be able to abort the shutdown on demand (or not).")
         text = "Aquest ordinador s\'apagarà automàticament a les %s" % shd_time.strftime('%H:%M:%S')
         title = "Apagada automàtica"
 
