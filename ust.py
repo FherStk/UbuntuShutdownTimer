@@ -16,7 +16,7 @@ class Popup(Enum):
     INFO=1      #only informative, no abort option
     SILENT=0    #no warning will be displayed
 
-SHUTDOWN_TIMES = [{"time": "16:28:00", "popup": Popup.ABORT}]
+SHUTDOWN_TIMES = [{"time": "17:00:00", "popup": Popup.ABORT}]
 WARNING_BEFORE_SHUTDOWN = 1 #in minutes
 
 def shutdown():    
@@ -48,17 +48,19 @@ def warningTimer(shd_time, popup):
     if(popup == Popup.SILENT or not GUI): print("     No warning message will be prompted so the shutdown event will raise on silent mode.", end='\n\n')
     else:         
         print("     Displaying the warning popup, so the user will be able to abort the shutdown on demand (or not).")
-        text = "Aquest ordinador s\'apagarà automàticament a les %s" % shd_time.strftime('%H:%M:%S')
-        title = "Apagada automàtica"
+        text = "Aquest ordinador s\'apagarà automàticament a les %s " % shd_time.strftime('%H:%M:%S')
+        title = "Aturada automàtica"
 
-        if(popup == Popup.INFO): pyautogui.alert(text=text, title=title, button='OK')                         
+        if(popup == Popup.INFO): action = os.system('zenity --notification --window-icon="info" --text="%s"' % text) 
+                                #pyautogui.alert(text=text, title=title, button='OK')                         
         else:
-            action = pyautogui.confirm(text=text, title=title, buttons=['Anul·la l\'apagada automàtica'])  # returns "OK" or "Cancel"                    
-            
-            if action != None:
+            #action = pyautogui.confirm(text=text, title=title, buttons=['Anul·la l\'aturada automàtica'])  # returns "OK" or "Cancel"                    
+            action = os.system('zenity --question --ok-label="Confirma l\'aturada automàtica" --cancel-label="Anul·la l\'aturada automàtica" --text="%s"' % text)
+            if action == 256:            
                 shd_timer.cancel()
                 print("     The user decided to abort the scheduled shutdown event.", end='\n\n')         
-                pyautogui.alert(text='Si us plau, recordi apagar l\'ordinador manualment quan acabi de fer-lo servir. Gràcies. ', title='Recordatori', button='OK')                         
+                action = os.system('zenity --notification --window-icon="info" --text="Si us plau, recordi apagar l\'ordinador manualment quan acabi de fer-lo servir. Gràcies."') 
+                #pyautogui.alert(text='Si us plau, recordi apagar l\'ordinador manualment quan acabi de fer-lo servir. Gràcies. ', title='Recordatori', button='OK')                         
 
 def main():    
     print("Ubuntu Shutdown Timer (v0.0.0.1)")
