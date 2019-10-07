@@ -9,13 +9,18 @@ import threading
 import datetime
 import time
 import os
+import enum
 
-debug = 1
-SHUTDOWN_TIMES = [{"time": "16:48:30", "popup": True}, {"time": "21:30:00", "popup": False}]
+class Popup(Enum):
+    ABORT = 2   #includes a button allowing to abort the shudown
+    INFO=1      #only informative, no abort option
+    SILENT=0    #no warning will be displayed
+
+SHUTDOWN_TIMES = [{"time": "16:48:30", "popup": Popup.ABORT}, {"time": "21:30:00", "popup": Popup.INFO}, {"time": "21:30:00", "popup": Popup.SILENT}]
 WARNING_BEFORE_SHUTDOWN = 1 #in minutes
 
 def shutdown():    
-    if(debug == 1): print("Shutting down!")
+    print("Shutting down!")
     #os.system('systemctl poweroff')     
 
 def warningTimer(shd_time, popup): 
@@ -25,35 +30,38 @@ def warningTimer(shd_time, popup):
         import pyautogui
     except ImportError:
         GUI = False
-
-    if(debug == 1): print("Warning timer rised up, setting up the shutdown timer:")         
-
+    
     wait = (shd_time - datetime.datetime.now()).total_seconds()
     shd_timer = threading.Timer(wait, shutdown)  
     shd_timer.start()     
 
-    if(debug == 1): print("     The shutdown event has been scheduled to rise up at %s" % shd_time.strftime('%H:%M:%S'))
-    if(not popup and debug == 1): print("     No warning popup will be displayed.", end='\n\n')
-    elif(popup):
-                
-        if(not GUI and debug): print("     No GUI has been loaded, so no warning message will prompt.", end='\n\n')
-        elif(GUI):
-            if(debug == 1): print("     Displaying warning popup.")
-            action = pyautogui.confirm(text='Aquest ordinador s''apagarà automàticament a les %s' % shd_time.strftime('%H:%M:%S'), title='Apagada automàtica', buttons=['Anul·la l''apagada automàtica'])  # returns "OK" or "Cancel"        
+    print("     The warning event raised up, so a new shutdown event will be scheduled:")
+    print("         Time:             %s" % shd_time.strftime('%H:%M:%S'))                
+    print("         GUI loaded:       %s" % GUI)
+    print("         Popup requested : %s" % popup)
+    
+    if(popup == Popup.SILENT or not GUI): print("     No warning message will be prompted so the shutdown event will raise on silent mode.", end='\n\n')
+    else:         
+        print("     Displaying warning popup, so the user will be able to abort the shutdown on demand.")
+        text = "Aquest ordinador s\'apagarà automàticament a les %s" % shd_time.strftime('%H:%M:%S')
+        title = "Apagada automàtica"
+
+        if(popup == Popup.INFO): pyautogui.alert(text=text, title=title, button='OK')                         
+        else:
+            action = pyautogui.confirm(text=text, title=title, buttons=['Anul·la l\'apagada automàtica'])  # returns "OK" or "Cancel"                    
             
             if action != None:
                 shd_timer.cancel()
-                if(debug == 1): print("     The user decided to abort the scheduled shutdown event.", end='\n\n')         
-                pyautogui.alert(text='Si us plau, recordi apagar l''ordinador manualment quan acabi de fer-lo servir. Gràcies. ', title='Recordatori', button='OK')                         
+                print("     The user decided to abort the scheduled shutdown event.", end='\n\n')         
+                pyautogui.alert(text='Si us plau, recordi apagar l\'ordinador manualment quan acabi de fer-lo servir. Gràcies. ', title='Recordatori', button='OK')                         
 
-def main():
-    if(debug == 1): 
-        print("Ubuntu Shutdown Timer (v0.0.0.1)")
-        print("Copyright (C) Fernando Porrino Serrano")
-        print("Under the GNU General Public License v3.0")
-        print("https://github.com/FherStk/UbuntuShutdownTimer", end='\n\n')        
+def main():    
+    print("Ubuntu Shutdown Timer (v0.0.0.1)")
+    print("Copyright (C) Fernando Porrino Serrano")
+    print("Under the GNU General Public License v3.0")
+    print("https://github.com/FherStk/UbuntuShutdownTimer", end='\n\n')        
 
-    if(debug == 1): print("Setting up the warning timers:")
+    print("Setting up the warning timers:")
     now = datetime.datetime.now()
     
     for sdt in SHUTDOWN_TIMES:
@@ -62,13 +70,12 @@ def main():
 
         #wait till warning time for each warning requested (a warning is a shutdown requested time - x minutes)        
         if(wrn_time > datetime.datetime.now()):
-            if(debug == 1): print("     A new warning message has been scheduled to popup at %s" % wrn_time.strftime('%H:%M:%S'), end='\n\n')
+            print("     A new warning message has been scheduled to popup at %s" % wrn_time.strftime('%H:%M:%S'), end='\n\n')
             wait = (wrn_time - datetime.datetime.now()).total_seconds()
             time.sleep(wait)
             warningTimer(shd_time, sdt["popup"])
-            
-        elif(debug == 1): 
-            print("     A warning message has been ignored due its schedule time has passed at %s" % wrn_time.strftime('%H:%M:%S')) 
+                    
+        print("     A warning message has been ignored due its schedule time has passed at %s" % wrn_time.strftime('%H:%M:%S')) 
 
 if __name__ == "__main__":
     main()
