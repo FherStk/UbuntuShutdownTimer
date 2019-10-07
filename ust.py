@@ -5,11 +5,11 @@
 #dependencies: pip3 install pyautogui
 #documentation: https://pyautogui.readthedocs.io/en/latest/
 
+from enum import Enum
 import threading
 import datetime
 import time
 import os
-import enum
 
 class Popup(Enum):
     ABORT = 2   #includes a button allowing to abort the shudown
