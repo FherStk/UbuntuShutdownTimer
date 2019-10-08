@@ -19,11 +19,11 @@ class Popup(Enum):
 SHUTDOWN_TIMES = [{"time": "17:00:00", "popup": Popup.ABORT}]
 WARNING_BEFORE_SHUTDOWN = 1 #in minutes
 
-def shutdown():    
+def shutdown():
     print("Shutting down!")
-    #os.system('systemctl poweroff')     
+    #os.system('systemctl poweroff')
 
-def warningTimer(shd_time, popup):     
+def warningTimer(shd_time, popup):
     GUI = True
     GUIException = ""
     
@@ -45,20 +45,22 @@ def warningTimer(shd_time, popup):
     if(GUI): print("", end='\n\n')
     else: print(" (%s)" % GUIException, end='\n\n')
         
+    #TODO: fix accents for Zenity
     if(popup == Popup.SILENT or not GUI): print("     No warning message will be prompted so the shutdown event will raise on silent mode.", end='\n\n')
     else:         
         print("     Displaying the warning popup, so the user will be able to abort the shutdown on demand (or not).")
-        title = "Aturada automàtica"
-        text = "Aquest ordinador s\'apagarà automàticament a les %s." % shd_time.strftime('%H:%M:%S')                
+        text = ("Aquest ordinador s'apagara automaticament a les %s." % shd_time.strftime('%H:%M:%S'))#.encode('ascii')
 
-        if(popup == Popup.INFO): action = os.system('zenity --notification --window-icon="info" --text="%s"' % text.encode('utf-8'))                                 
+        if(popup == Popup.INFO): action = os.system('zenity --notification --text="%s" >/dev/null 2>&1' % text)                                 
         else:
-            text = text + " Si vol anul·lar l'aturada automàtica premi el botò 'No'"
-            action = os.system('zenity --question --text="%s"' % text.encode('utf-8'))
-            if action == 256:            
+            text = text + " Si vol anul.lar laturada automatica premi el boto 'No'"
+            action = os.system('zenity --question --text="%s" >/dev/null 2>&1' % text)
+            
+            if action != 256: print("     The user decided to continue with the scheduled shutdown event.", end='\n\n')         
+            else:
                 shd_timer.cancel()
                 print("     The user decided to abort the scheduled shutdown event.", end='\n\n')         
-                action = os.system('zenity --notification --window-icon="info" --text="Si us plau, recordi apagar l\'ordinador manualment quan acabi de fer-lo servir. Gràcies."'.encode('utf-8')) 
+                action = os.system('zenity --info --text="Si us plau, recordi apagar l\'ordinador manualment quan acabi de fer-lo servir. Gracies." >/dev/null 2>&1')                         
 
 def main():    
     print("Ubuntu Shutdown Timer (v0.0.0.1)")
@@ -71,7 +73,7 @@ def main():
 
     for sdt in SHUTDOWN_TIMES:
         #for testing purposes
-        warningTimer(now, sdt["popup"])
+        warningTimer(now + datetime.timedelta(seconds = 30), sdt["popup"])
         #end testing purposes
 
         shd_time = datetime.datetime.strptime(sdt["time"], '%H:%M:%S').replace(year=now.year, month=now.month, day=now.day)
