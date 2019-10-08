@@ -29,6 +29,7 @@ def warningTimer(shd_time, popup):
     
     try:                
         #The pyautogui library only loads correctly once the GUI becomes ready, otherwise it will rise an exception
+        #TODO: remove the pyautogui library
         import pyautogui        
     except Exception as e:
         GUI = False
