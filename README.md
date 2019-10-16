@@ -25,5 +25,5 @@ Notice that there's other ways to accomplish this task, but the chosen one allow
 * Take profit of the single computer architecture (client and server shares machine and configuration files).
 
 ## Greatings and sources:
-https://pymotw.com/3/socket/tcp.html
-https://www.geeksforgeeks.org/socket-programming-multi-threading-python/
+* https://pymotw.com/3/socket/tcp.html
+* https://www.geeksforgeeks.org/socket-programming-multi-threading-python/
