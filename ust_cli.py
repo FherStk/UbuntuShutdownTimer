@@ -76,7 +76,8 @@ def warning(shd_time, popup):
             action = os.system('zenity --question --text="{}" {}'.format(text, noOutput))
             #For testing only
             #action = 1
-            if action == 256: print("     The user decided to continue with the scheduled shutdown event.", end='\n\n')         
+            #TODO: add a notification with the shutdown time, as a memo
+            if action == 256: print("     The user decided to continue with the scheduled shutdown event.", end='\n\n')                     
             else:                
                 print("     The user decided to abort the scheduled shutdown event.", end='\n\n')         
                 os.system('zenity --info --text="Si us plau, recordi apagar l\'ordinador manualment quan acabi de fer-lo servir. Gracies." {}'.format(noOutput))
