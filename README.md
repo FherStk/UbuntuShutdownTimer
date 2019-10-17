@@ -50,7 +50,8 @@ WantedBy=multi-user.target
  ```
 
 9. Edit the `shared/config.py` file inside the `UbuntuShutdownTimer` folder:
-    - Setup the shutdwon events (time and type), for example: `SHUTDOWN_TIMES = [{"time": "14:45:00", "popup": Popup.ABORT}, {"time": "21:15:00", "popup": Popup.SILENT}]` 
+    - Setup the shutdwon events (time and type), for example: 
+    `SHUTDOWN_TIMES = [{"time": "14:45:00", "popup": Popup.ABORT}, {"time": "21:15:00", "popup": Popup.SILENT}]` 
     - All the settings are self-explanatory
 
 
