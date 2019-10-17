@@ -72,11 +72,11 @@ def warning(shd_time, popup):
 
         if(popup == popup.INFO): action = os.system('zenity --notification --text="{}" {}', text, noOutput)
         else:
-            text = text + " Si vol anul.lar laturada automatica premi el boto 'No'"
+            text = text + " \n\nDessitga anul.lar laturada automatica?"
             action = os.system('zenity --question --text="{}" {}'.format(text, noOutput))
             #For testing only
-            action = 256
-            if action != 256: print("     The user decided to continue with the scheduled shutdown event.", end='\n\n')         
+            action = 1
+            if action == 256: print("     The user decided to continue with the scheduled shutdown event.", end='\n\n')         
             else:                
                 print("     The user decided to abort the scheduled shutdown event.", end='\n\n')         
                 os.system('zenity --info --text="Si us plau, recordi apagar l\'ordinador manualment quan acabi de fer-lo servir. Gracies." {}'.format(noOutput))
