@@ -24,6 +24,36 @@ Notice that there's other ways to accomplish this task, but the chosen one allow
 * Simple implementation with the minimal communication and synchronization between server and client.
 * Take profit of the single computer architecture (client and server shares machine and configuration files).
 
+## How to install
+1. Copy the `UbuntuShutdownTimer` main folder into somewhere accessible by all users.
+2. Create a new service file into the systemd/system folder (for example: `/lib/systemd/system/ust_server.service`).
+ - The content must be as follows:
+```
+   [Unit]
+    Description=Ubuntu Shutdown Timer
+    After=multi-user.target
+
+    [Service]
+    ExecStart=/usr/bin/python3 -u /FOLDER/UbuntuShutdownTimer/ust_server.py
+    Type=simple
+
+    [Install]
+    WantedBy=multi-user.target
+```
+3. Reload the systemctl daemon with `sudo systemctl daemon-reload`
+4. Enable the new service with `sudo systemctl enable ust_server.service`
+5. Start the service with `sudo systemctl start ust_server.service`
+6. Edit the `~/.profile` file for each user able to login into the computer.
+ - Add a new line at the end as follows:
+ ```
+    /usr/bin/python3 /FOLDER/UbuntuShutdownTimer/ust_client.py &
+ ```
+
+7. Edit the `shared/config.py` file inside the `UbuntuShutdownTimer` folder:
+    - Setup the shutdwon events (time and type), for example: `SHUTDOWN_TIMES = [{"time": "14:45:00", "popup": Popup.ABORT}, {"time": "21:15:00", "popup": Popup.SILENT}]` 
+    - All the settings are self-explanatory
+
+
 ## Greatings and sources:
 * https://pymotw.com/3/socket/tcp.html
 * https://www.geeksforgeeks.org/socket-programming-multi-threading-python/
