@@ -46,7 +46,7 @@ def main():
     now = datetime.datetime.now()
     #TODO: once a shutdown has been cancelled, automatically schedule de next-one...
 
-    shd_time = now + datetime.timedelta(seconds = 15)
+    shd_time = now + datetime.timedelta(minutes = Config.WARNING_BEFORE_SHUTDOWN)
     #shd_time = datetime.datetime.strptime(sdt["time"], '%H:%M:%S').replace(year=now.year, month=now.month, day=now.day)
     shd_timer = threading.Timer((shd_time - datetime.datetime.now()).total_seconds(), shutdown)  
     shd_timer.start()
