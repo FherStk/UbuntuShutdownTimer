@@ -6,6 +6,7 @@ from shared.connection import Connection
 import threading
 import datetime
 import sys
+import os
 
 #TODO:  Share socket creation code
 #       Load config from a file
