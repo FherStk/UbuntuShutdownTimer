@@ -20,9 +20,9 @@ Notice that there's other ways to accomplish this task, but the chosen one allow
     Simple implementation with the minimal communication and synchronization between server and client.
     Take profit of the single computer architecture (client and server shares machine and configuration files).
 '''
-from src.popup import Popup
-from src.config import Config
-from src.connection import Connection
+from shared.popup import Popup
+from shared.config import Config
+from shared.connection import Connection
 import threading
 import datetime
 import sys

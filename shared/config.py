@@ -1,4 +1,4 @@
-from src.popup import Popup
+from shared.popup import Popup
 
 class Config():
     SHUTDOWN_TIMES = [{"time": "17:00:00", "popup": Popup.ABORT}]

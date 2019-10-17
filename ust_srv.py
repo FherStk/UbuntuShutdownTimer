@@ -1,8 +1,8 @@
 
 
-from src.popup import Popup
-from src.config import Config
-from src.connection import Connection
+from shared.popup import Popup
+from shared.config import Config
+from shared.connection import Connection
 import threading
 import datetime
 import sys

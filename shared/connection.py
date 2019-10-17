@@ -1,5 +1,5 @@
 import socket
-from src.config import Config
+from shared.config import Config
 
 class Connection():
 
