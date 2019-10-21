@@ -1,25 +1,3 @@
-#Source: https://pymotw.com/3/socket/tcp.html
-#        https://www.geeksforgeeks.org/socket-programming-multi-threading-python/
-
-'''
-How does it works:
-   The server starts:
-        It setups a new shutdown event from the given schedule times 
-        It opens a new communication channel via socket and waits for the clients to connect in.
-
-    The client starts:
-        It setups a new warning event from the given schedule times (shared config file with server and client, because client and server shares computer in order to work event without network).
-        When a popup prompts, the action chosen by the user will be send to the server.
-
-    A client connects to the server:
-        The client shares with the server the action taken by te user (abort or continue with the shudown).
-            Abort: the shutdown event will be cancelled and the next-one will be scheduled.
-            Ignore: no action will be taken.
-
-Notice that there's other ways to accomplish this task, but the chosen one allows to:
-    Simple implementation with the minimal communication and synchronization between server and client.
-    Take profit of the single computer architecture (client and server shares machine and configuration files).
-'''
 from shared.popup import Popup
 from shared.config import Config
 from shared.connection import Connection
@@ -27,10 +5,6 @@ import threading
 import datetime
 import sys
 import os
-
-#TODO:  Share socket creation code
-#       Load config from a file
-#       Use create_connection
 
 def cancel():
     print("Connecting to the server on {} port {}:".format(Connection.SERVER, Connection.PORT))
@@ -72,17 +46,13 @@ def warning(shd_time, popup):
 
         if(popup == popup.INFO): action = os.system('zenity --notification --no-wrap --text="{}" {}', text, noOutput)
         else:
-            action = os.system('zenity --question --no-wrap --text="{}" {}'.format(text + " \nDesitja anul·lar l'aturada automàtica?", noOutput))
-            #For testing only
-            #action = 1
-            #TODO: add a notification with the shutdown time, as a memo
+            action = os.system('zenity --question --no-wrap --text="{}" {}'.format(text + " \nDesitja anul·lar l'aturada automàtica?", noOutput))            
             if action == 256: 
                 print("     The user decided to continue with the scheduled shutdown event.", end='\n\n')                     
                 os.system('zenity --notification --text="{}" {}'.format("Apagada automàtica a les {}".format(shd_time.strftime('%H:%M:%S')), noOutput))
 
             else:                
                 print("     The user decided to abort the scheduled shutdown event.", end='\n\n')         
-                #os.system('zenity --info --text="{}" {}'.format(text, noOutput))
                 os.system('zenity --notification --text="{}" {}'.format("Recordi apagar l'ordinador manualment. Gràcies.", noOutput))
                 cancel()
 

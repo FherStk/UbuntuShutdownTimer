@@ -1,5 +1,3 @@
-
-
 from shared.popup import Popup
 from shared.config import Config
 from shared.connection import Connection
@@ -8,13 +6,25 @@ import datetime
 import sys
 import os
 
-#TODO:  Share socket creation code
-#       Load config from a file
-
+'''
+INFO: Just shuts down the machine
+RETURN: NONE
+'''
 def shutdown():
     print("\nShutting down!")
     #os.system('systemctl poweroff')
 
+'''
+INFO:   Continuous polling for data sent from the client using the given connection. 
+        If the client wants to abort the shutdown timer, it will be cancelled.  
+
+ARGS:
+        connection:     The connection to listen.
+        client_address: The client's address, for log purposes only.
+        shutdown_timer: The scheduled shutdown timer that could be cancelled by the client's request.
+
+RETURN: NONE
+'''
 def listen(connection, client_address, shutdown_timer):
     print("     {} - Reading received data.".format(client_address))
 
@@ -36,23 +46,61 @@ def listen(connection, client_address, shutdown_timer):
             connection.close()
             break
 
-def main():    
-    print("Ubuntu Shutdown Timer (SERVER) - v0.0.0.2")
-    print("Copyright (C) Fernando Porrino Serrano")
-    print("Under the GNU General Public License v3.0")
-    print("https://github.com/FherStk/UbuntuShutdownTimer", end='\n\n')   
+'''
+INFO:   Schedules a new shutdown timer, using the schedule time that has been set in the config.py file.
+        The schedule_idx arguments defines wich item must be used (overflows will start again from the begining).
 
+ARGS:   
+        schedule_idx:   The item that will be used for schedulling a new shutdown event, the list containing these definition
+                        can be found in the shared/config.py file.
+
+RETURN:
+        shd_time:   The scheduled shutdown time.
+        shd_timer:  The shutdown timer used for schedulling.
+'''
+def schedule(schedule_idx=0):    
     print("Setting up the shutdown event:", end='')
-    sdt = Config.SHUTDOWN_TIMES[0]
-    now = datetime.datetime.now()
-    #TODO: once a shutdown has been cancelled, automatically schedule de next-one...
 
-    shd_time = now + datetime.timedelta(minutes = Config.WARNING_BEFORE_SHUTDOWN)
-    #shd_time = datetime.datetime.strptime(sdt["time"], '%H:%M:%S').replace(year=now.year, month=now.month, day=now.day)
+    schedule_idx = schedule_idx % len(Config.SHUTDOWN_TIMES)
+    sdt = Config.SHUTDOWN_TIMES[schedule_idx]
+    now = datetime.datetime.now()
+
+    #Next line for testing only purposes
+    #shd_time = now + datetime.timedelta(minutes = Config.WARNING_BEFORE_SHUTDOWN)
+    shd_time = datetime.datetime.strptime(sdt["time"], '%H:%M:%S').replace(year=now.year, month=now.month, day=now.day)
+
+    if shd_time < datetime.datetime.now(): shd_time = shd_time + datetime.timedelta(days = 1)
     shd_timer = threading.Timer((shd_time - datetime.datetime.now()).total_seconds(), shutdown)  
     shd_timer.start()
     print(" OK")
     print("     The shutdown has been scheduled on {}".format(shd_time.strftime('%H:%M:%S')), end='\n\n')
+
+    return shd_time, shd_timer
+
+'''
+INFO:   Blocks the process till a new connection has been stablished by the client, opening a new thread in order to handle it.
+
+ARGS:
+        sock:       The socket used for the communication.
+        shd_timer:  The scheduled shutdown timer.
+
+RETURN: NONE
+'''
+def listen(sock, shd_timer):
+    connection, client_address = sock.accept()
+
+    print("     {} - New connection received.".format(client_address))
+    thread = threading.Thread(target=listen, args=(connection, client_address, shd_timer))
+    thread.start()
+
+def main():    
+    print("Ubuntu Shutdown Timer (SERVER) - v0.2.0.0")
+    print("Copyright (C) Fernando Porrino Serrano")
+    print("Under the GNU General Public License v3.0")
+    print("https://github.com/FherStk/UbuntuShutdownTimer", end='\n\n')   
+    
+    shd_time, shd_timer = schedule()
+    #TODO:  multi-user support: if one cancels the shutdown, it wont be warned for other users logged in.    
 
     print("Starting server:", end='')    
     sock = Connection.create()
@@ -62,12 +110,11 @@ def main():
 
     print("Waiting for connections:")
     try:
+        schedule_idx = 1
         while True:
-            connection, client_address = sock.accept()
-
-            print("     {} - New connection received.".format(client_address))
-            thread = threading.Thread(target=listen, args=(connection, client_address, shd_timer))
-            thread.start()
+            while shd_time > datetime.datetime.now():
+                listen(sock, shd_timer)
+                schedule(schedule_idx)        
 
     except Exception as e:
         print("     EXCEPTION: {}.".format(e))
