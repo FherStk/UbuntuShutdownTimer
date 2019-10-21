@@ -67,21 +67,23 @@ def warning(shd_time, popup):
     if(popup == popup.SILENT): print("     No warning message will be prompted so the shutdown event will raise on silent mode.", end='\n\n')
     else:
         print("     Displaying the warning popup, so the user will be able to abort the shutdown on demand (or only warned about it).")
-        text = "Aquest ordinador s'apagarà automàticament a les {}.".format(shd_time.strftime('%H:%M:%S'))
+        text = "Aquest ordinador s'apagarà automàticament a les <b>{}</b>.".format(shd_time.strftime('%H:%M:%S'))
         noOutput = ">/dev/null 2>&1"
 
-        if(popup == popup.INFO): action = os.system('zenity --notification --text="{}" {}', text, noOutput)
+        if(popup == popup.INFO): action = os.system('zenity --notification --no-wrap --text="{}" {}', text, noOutput)
         else:
-            text = text + " \n\nDesitja anul·lar l'aturada automàtica?"
-            action = os.system('zenity --question --text="{}" {}'.format(text, noOutput))
+            action = os.system('zenity --question --no-wrap --text="{}" {}'.format(text + " \nDesitja anul·lar l'aturada automàtica?", noOutput))
             #For testing only
             #action = 1
             #TODO: add a notification with the shutdown time, as a memo
-            if action == 256: print("     The user decided to continue with the scheduled shutdown event.", end='\n\n')                     
+            if action == 256: 
+                print("     The user decided to continue with the scheduled shutdown event.", end='\n\n')                     
+                os.system('zenity --notification --text="{}" {}'.format("Apagada automàtica a les {}".format(shd_time.strftime('%H:%M:%S')), noOutput))
+
             else:                
                 print("     The user decided to abort the scheduled shutdown event.", end='\n\n')         
-                text = "Si us plau, recordi apagar l'ordinador manualment quan acabi de fer-lo servir. Gràcies."
-                os.system('zenity --info --text="{}" {}'.format(text, noOutput))
+                #os.system('zenity --info --text="{}" {}'.format(text, noOutput))
+                os.system('zenity --notification --text="{}" {}'.format("Recordi apagar l'ordinador manualment. Gràcies.", noOutput))
                 cancel()
 
 def main():    
