@@ -67,12 +67,12 @@ def warning(shd_time, popup):
     if(popup == popup.SILENT): print("     No warning message will be prompted so the shutdown event will raise on silent mode.", end='\n\n')
     else:
         print("     Displaying the warning popup, so the user will be able to abort the shutdown on demand (or only warned about it).")
-        text = "Aquest ordinador s'apagara automaticament a les {}.".format(shd_time.strftime('%H:%M:%S'))#.encode('ascii')
+        text = "Aquest ordinador s'apagarà automàticament a les {}.".format(shd_time.strftime('%H:%M:%S'))
         noOutput = ">/dev/null 2>&1"
 
         if(popup == popup.INFO): action = os.system('zenity --notification --text="{}" {}', text, noOutput)
         else:
-            text = text + " \n\nDessitga anul.lar laturada automatica?"
+            text = text + " \n\nDesitja anul·lar l'aturada automàtica?"
             action = os.system('zenity --question --text="{}" {}'.format(text, noOutput))
             #For testing only
             #action = 1
@@ -80,7 +80,8 @@ def warning(shd_time, popup):
             if action == 256: print("     The user decided to continue with the scheduled shutdown event.", end='\n\n')                     
             else:                
                 print("     The user decided to abort the scheduled shutdown event.", end='\n\n')         
-                os.system('zenity --info --text="Si us plau, recordi apagar l\'ordinador manualment quan acabi de fer-lo servir. Gracies." {}'.format(noOutput))
+                text = "Si us plau, recordi apagar l'ordinador manualment quan acabi de fer-lo servir. Gràcies."
+                os.system('zenity --info --text="{}" {}'.format(text, noOutput))
                 cancel()
 
 def main():    
