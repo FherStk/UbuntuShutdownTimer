@@ -1,41 +1,23 @@
 from shared.popup import Popup
 from shared.config import Config
 from shared.connection import Connection
+from shared.utils import Utils
 import threading
 import datetime
 import sys
 import os
 
-def cancel():
-    print("Connecting to the server on {} port {}:".format(Connection.SERVER, Connection.PORT))
-    sock = Connection.join()
-
+def abort(connection):    
     try:
         # Send data        
         print("     Sending the ABORT request to the server... ", end='')
-        sock.sendall(b"ABORT")
-
-        # Look for the response
-        data = sock.recv(1024)
-        if(data == b"ACK"):
-            print("OK")
-
-        elif (data == b"NACK"):
-            print("ERROR! The server responded with a NON-ACK")
-            #TODO: retry sistem
-
-        else:
-            print("ERROR! Unexpected response received: {}".format(data))
-
+        connection.sendall(b"ABORT")
+        print("OK")
+              
     except Exception as e:
-        print("EXCEPTION: {}".format(e))
-        
-    finally:
-        print("     Closing the connetion with the server... ", end='')
-        sock.close()        
-        print("OK", end='\n\n')
+        print("EXCEPTION: {}".format(e))            
 
-def warning(shd_time, popup):
+def warning(connection, shd_time, popup):
     print("Rising the warning event: ")
 
     if(popup == popup.SILENT): print("     No warning message will be prompted so the shutdown event will raise on silent mode.", end='\n\n')
@@ -54,26 +36,76 @@ def warning(shd_time, popup):
             else:                
                 print("     The user decided to abort the scheduled shutdown event.", end='\n\n')         
                 os.system('zenity --notification --text="{}" {}'.format("Recordi apagar l'ordinador manualment. Gràcies.", noOutput))
-                cancel()
+                abort(connection)
+
+def requestInfo(connection):  
+    try: 
+        print("     Requesting for the next shutdown time... ", end='')
+        connection.sendall(b"TIME")        
+        shd_time = connection.recv(1024).decode("ascii")
+        print("OK: {}".format(shd_time.strftime('%H:%M:%S')))   
+
+        print("     Requesting for the next warning popup type... ", end='')
+        connection.sendall(b"POPUP")        
+        popup = connection.recv(1024).decode("ascii")
+        print("OK: {}".format(popup))        
+
+        return shd_time, popup
+
+    except Exception as e:
+        print("EXCEPTION: {}".format(e))     
+        return "" 
+
+def setupWarning(connection, shd_time, popup):
+    print("Setting up the warning event:", end='')
+
+    shd_time = Utils.getSchedulableDateTime(shd_time)
+    wrn_time = shd_time - datetime.timedelta(minutes = Config.WARNING_BEFORE_SHUTDOWN)
+    wrn_timer = threading.Timer((wrn_time - datetime.datetime.now()).total_seconds(), warning,  [connection, shd_time, popup])  
+    wrn_timer.start()
+    
+    print(" OK")      
+    print("     The warning popup has been scheduled on {}".format(wrn_time.strftime('%H:%M:%S')), end='\n\n')                     
+
+    return wrn_timer
+
+def listen(connection, wrn_timer):  
+    print("Listening for server messages")
+
+    while wrn_timer.is_alive():
+        data = connection.recv(1024)  
+
+        if data:
+            if(data == b"REFRESH"):
+                print("The server requested for a REFRESH, cancelling the warning event... ", end='')                
+                wrn_timer.cancel()
+                print("OK")                
+
+            else:
+                print("Unexpected message received from the server: {!r}".format(data))
 
 def main():    
-    print("Ubuntu Shutdown Timer (CLIENT) - v0.0.0.2")
+    print("Ubuntu Shutdown Timer (CLIENT) - v0.2.0.0")
     print("Copyright (C) Fernando Porrino Serrano")
     print("Under the GNU General Public License v3.0")
     print("https://github.com/FherStk/UbuntuShutdownTimer", end='\n\n')   
 
-    print("Setting up the warning event:", end='')
-    sdt = Config.SHUTDOWN_TIMES[0]
-    now = datetime.datetime.now()   
-    #TODO: once a shutdown has been cancelled, automatically schedule de next-one...
+    #Step 1: connect with the server
+    #Step 2: request for the next scheduled shutdown time
+    #Step 3: schedule the related warning event
+    #Step 4: listen for messages from the server
+        #Step 4.1: REFRESH: abort the current warning event and return to Step 2
+    #Step 5: the warning event rised up and the user selected the option to abort
+        #Step 5.1: ABORT: send the request to the server
 
-    shd_time = now + datetime.timedelta(minutes = Config.WARNING_BEFORE_SHUTDOWN)
-    #shd_time = datetime.datetime.strptime(sdt["time"], '%H:%M:%S').replace(year=now.year, month=now.month, day=now.day)
-    wrn_time = shd_time - datetime.timedelta(minutes = Config.WARNING_BEFORE_SHUTDOWN)
-    wrn_timer = threading.Timer((wrn_time - datetime.datetime.now()).total_seconds(), warning, [shd_time, Config.SHUTDOWN_TIMES[0]["popup"]])  
-    print(" OK")      
-    print("     The warning popup has been scheduled on {}".format(wrn_time.strftime('%H:%M:%S')), end='\n\n')                    
-    wrn_timer.start()  
+    print("Connecting to the server on {} port {}:".format(Connection.SERVER, Connection.PORT))
+    connection = Connection.join()
+
+    #listen has a loop inside and will remain looping till wrn_timer has been cancelled
+    while True:
+        shd_time, popup = requestInfo(connection)    
+        wrn_timer = setupWarning(connection, shd_time, popup)    
+        listen(connection, wrn_timer)
 
 if __name__ == "__main__":
     main()

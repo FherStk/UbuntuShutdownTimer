@@ -1,6 +1,7 @@
 from shared.popup import Popup
 from shared.config import Config
 from shared.connection import Connection
+from shared.utils import Utils
 import threading
 import datetime
 import sys
@@ -39,7 +40,7 @@ def refresh(connections):
         except Exception as e:
             print("     EXCEPTION: {}.".format(e))
 
-def listen(connections, connection, client_address, shutdown_time, shutdown_timer):
+def listen(connections, connection, client_address, shutdown_time, shutdown_timer, popup):
     """
     Continuous polling for data sent from the client using the given connection.
     It can be used to ask for the shutdown times or for shutdown abort requests.    
@@ -62,9 +63,13 @@ def listen(connections, connection, client_address, shutdown_time, shutdown_time
                 print("     {} -  Shutdown time requested, sending back the current scheduled shutdown time.".format(client_address))
                 connection.sendall(shutdown_time.encode("ascii"))
 
+            if(data == b"POPUP"):
+                print("     {} -  Popup type requested, sending back the current warning popup type.".format(client_address))
+                connection.sendall(popup.encode("ascii"))
+
             elif(data == b"ABORT"):
                 print("     {} - Abort requested, so the shutdown event will be aborted.".format(client_address))
-                shutdown_timer.cancel()                                
+                shutdown_timer.cancel()
 
             else:
                 print("     {} - Unexpected message received: {!r}".format(client_address, data))
@@ -78,30 +83,26 @@ def schedule(connections, schedule_idx=0):
     connections     --- All the open connections.
     schedule_idx    --- The item that will be used for schedulling a new shutdown event (default 0).
                         The list containing these definition can be found in the shared/config.py file.
-
     Return:
     shd_time        ---  The scheduled shutdown time.
     shd_timer       ---  The shutdown timer used for schedulling.
     """ 
 
     print("Setting up the shutdown event:", end='')
-
-    schedule_idx = schedule_idx % len(Config.SHUTDOWN_TIMES)
-    sdt = Config.SHUTDOWN_TIMES[schedule_idx]
-    now = datetime.datetime.now()
-
-    #Next line for testing only purposes
+    
+    #Next 2 lines for testing only purposes
+    #now = datetime.datetime.now()
     #shd_time = now + datetime.timedelta(minutes = Config.WARNING_BEFORE_SHUTDOWN)
-    shd_time = datetime.datetime.strptime(sdt["time"], '%H:%M:%S').replace(year=now.year, month=now.month, day=now.day)
-
-    if shd_time < datetime.datetime.now(): shd_time = shd_time + datetime.timedelta(days = 1)
+    schedule_idx = schedule_idx % len(Config.SHUTDOWN_TIMES)
+    sdt = Config.SHUTDOWN_TIMES[schedule_idx]    
+    shd_time = Utils.getSchedulableDateTime(sdt["time"])
     shd_timer = threading.Timer((shd_time - datetime.datetime.now()).total_seconds(), shutdown, [connections])  
     shd_timer.start()
 
     print(" OK")
     print("     The shutdown has been scheduled on {}".format(shd_time.strftime('%H:%M:%S')), end='\n\n')
 
-    return shd_time, shd_timer
+    return shd_time, shd_timer, sdt["popup"]
 
 def handle_connections(sock):
     connections = []
@@ -110,13 +111,13 @@ def handle_connections(sock):
     #Step 1: schedule next shutdown.
     #Step 2: broadcast a refresh message for all connected clients (0 on firs loop)
     #Step 3: listen for connections forever.        
-    #Step 4: a new connected client or one who received the refresh message will ask for the next scheduled shutdown time, send it
+    #Step 4: a new connected client or one who received the refresh message will ask for the next scheduled shutdown time & popup type
     #Step 5: when a a client requests to abort the scheduled shutdown
         #Step 5.1: abort        
         #Step 5.2: return to step 1 
 
     while True:
-        shd_time, shd_timer = schedule(connections, schedule_idx+1)        
+        shd_time, shd_timer, popup = schedule(connections, schedule_idx+1)        
         refresh(connections)
 
         print("Waiting for connections:")
@@ -127,7 +128,7 @@ def handle_connections(sock):
             connections.append((connection, client_address))         
 
             print("     {} - Starting a new listening thread.".format(client_address))
-            thread = threading.Thread(target=listen, args=(connections, connection, client_address, shd_time, shd_timer))
+            thread = threading.Thread(target=listen, args=(connections, connection, client_address, shd_time, shd_timer, popup))
             thread.start()
 
 def main():    
