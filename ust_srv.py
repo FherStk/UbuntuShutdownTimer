@@ -16,6 +16,7 @@ def shutdown(connections):
     print("\nClosing open connections...")
     for connection, client_address in connections:
         print("     Closing open connection with client {}".format(client_address))
+        #TODO: try/catch on each close, the sutdown must prevail! muahahaha!
         connection.close()
 
     print("\nShutting down!")
@@ -50,14 +51,12 @@ def listen(connections, connection, client_address, shutdown_time, shutdown_time
                 shutdown_timer.cancel()
                 connection.sendall(b"ACK")
 
+                #TODO: send the new info to all the clients in order to update (and remove the aborted scheduled events).
+
             else:
                 print("     {} - Unexpected message received: {!r}".format(client_address, data))
                 connection.sendall(b"NACK")
 
-        else:
-            print("     {} - No data received, closing the connection.".format(client_address), end='\n\n')
-            connection.close()
-            break
 
 def schedule(connections, schedule_idx=0):  
     """
