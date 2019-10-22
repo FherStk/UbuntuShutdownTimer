@@ -6,6 +6,8 @@ import datetime
 import sys
 import os
 
+#TODO: global bars will simplify the method's arguments list
+
 def shutdown(connections):
     """
     Just shuts down the machine    
@@ -15,12 +17,27 @@ def shutdown(connections):
     """
     print("\nClosing open connections...")
     for connection, client_address in connections:
-        print("     Closing open connection with client {}".format(client_address))
-        #TODO: try/catch on each close, the sutdown must prevail! muahahaha!
-        connection.close()
+        print("     Closing open connection with client {}... ".format(client_address), end='')
+        
+        try:
+            connection.close()            
+            print("OK")
+        except Exception as e:
+            print("     EXCEPTION: {}.".format(e))
 
     print("\nShutting down!")
     #os.system('systemctl poweroff')
+
+def refresh(connections):
+    print("\nSending the refresh broadcast message to all the clients:")
+    for connection, client_address in connections:
+        print("     Sending message to {}... ".format(client_address), end='')
+        
+        try:
+            connection.sendall(b"REFRESH")
+            print("OK")
+        except Exception as e:
+            print("     EXCEPTION: {}.".format(e))
 
 def listen(connections, connection, client_address, shutdown_time, shutdown_timer):
     """
@@ -43,20 +60,14 @@ def listen(connections, connection, client_address, shutdown_time, shutdown_time
         if data:
             if(data == b"TIME"):
                 print("     {} -  Shutdown time requested, sending back the current scheduled shutdown time.".format(client_address))
-                shutdown_timer.cancel()
                 connection.sendall(shutdown_time.encode("ascii"))
 
             elif(data == b"ABORT"):
                 print("     {} - Abort requested, so the shutdown event will be aborted.".format(client_address))
-                shutdown_timer.cancel()
-                connection.sendall(b"ACK")
-
-                #TODO: send the new info to all the clients in order to update (and remove the aborted scheduled events).
+                shutdown_timer.cancel()                                
 
             else:
                 print("     {} - Unexpected message received: {!r}".format(client_address, data))
-                connection.sendall(b"NACK")
-
 
 def schedule(connections, schedule_idx=0):  
     """
@@ -96,15 +107,24 @@ def handle_connections(sock):
     connections = []
     schedule_idx = -1
 
+    #Step 1: schedule next shutdown.
+    #Step 2: broadcast a refresh message for all connected clients (0 on firs loop)
+    #Step 3: listen for connections forever.        
+    #Step 4: a new connected client or one who received the refresh message will ask for the next scheduled shutdown time, send it
+    #Step 5: when a a client requests to abort the scheduled shutdown
+        #Step 5.1: abort        
+        #Step 5.2: return to step 1 
+
     while True:
-        shd_time, shd_timer = schedule(connections, schedule_idx+1)
+        shd_time, shd_timer = schedule(connections, schedule_idx+1)        
+        refresh(connections)
 
         print("Waiting for connections:")
-        while shd_time > datetime.datetime.now():
+        while shd_timer.isAlive():
             connection, client_address = sock.accept()
 
-            print("     {} - New connection received.".format(client_address))
-            connections.append((connection, client_address))
+            print("     {} - New connection stablished.".format(client_address))
+            connections.append((connection, client_address))         
 
             print("     {} - Starting a new listening thread.".format(client_address))
             thread = threading.Thread(target=listen, args=(connections, connection, client_address, shd_time, shd_timer))
