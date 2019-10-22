@@ -14,7 +14,7 @@ def shutdown():
     print("\nShutting down!")
     #os.system('systemctl poweroff')
 
-def listen(connection, client_address, shutdown_timer):
+def read(connection, client_address, shutdown_timer):
     """
     Continuous polling for data sent from the client using the given connection.
     If the client wants to abort the shutdown timer, it will be cancelled.  
@@ -85,11 +85,11 @@ def listen(sock, shd_timer):
     sock        ---  The socket used for the communication.
     shd_timer   ---  The scheduled shutdown timer.
     """
-
+    
     connection, client_address = sock.accept()
 
     print("     {} - New connection received.".format(client_address))
-    thread = threading.Thread(target=listen, args=(connection, client_address, shd_timer))
+    thread = threading.Thread(target=read, args=(connection, client_address, shd_timer))
     thread.start()
 
 def main():    
