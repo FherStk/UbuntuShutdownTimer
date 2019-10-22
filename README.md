@@ -14,15 +14,19 @@ It has been built on a client-server architecture that uses sockets for communic
 ** A new communication channel via socket is created and the server waits for the clients to connect in.
 
 * The client starts:
-** A new warning event is scheduled from the given schedule times (inside the `config.py' file).
-** There are three warning types:
+** The client connects to the server.
+** The server sends to the client the scheduled shutdown time.
+** A new warning event is scheduled from the given schedule time, there are three warning types:
 *** *SILENT*: No warning will be displayed, so the shutdown event will proceed as scheduled.
 *** *INFO*: A warning will be displayed in order to inform the user about the scheduled shutdown time, but its read-only.
 *** *ABORT*: The warning includes an option that allows the user to abort the scheduled shutdown event. If used, the client will communicate the server in order to abort the shudown.
+*** The client will remain connected to the server.
 
-Notice that there's other ways to accomplish this task, but the chosen one allows to:
-* Simple implementation with the minimal communication and synchronization between server and client.
-* Take profit of the single computer architecture (client and server shares machine and configuration files).
+* A shutdown is aborted withing the client due user's interaction:
+** The client will communicate with the server in order to send the abort command.
+** The server will receive the abort command and will proceed to abort the scheduled event.
+** The server will schedule the next shutdown event.
+** The server will send to the connected clients the next scheduled shutdown time.
 
 ## How to install
 1. Copy the `UbuntuShutdownTimer` main folder into somewhere accessible by all users.
