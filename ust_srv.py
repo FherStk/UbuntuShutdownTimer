@@ -6,26 +6,25 @@ import datetime
 import sys
 import os
 
-'''
-INFO: Just shuts down the machine
-RETURN: NONE
-'''
 def shutdown():
+    """
+    Just shuts down the machine    
+    """
+
     print("\nShutting down!")
     #os.system('systemctl poweroff')
 
-'''
-INFO:   Continuous polling for data sent from the client using the given connection. 
-        If the client wants to abort the shutdown timer, it will be cancelled.  
-
-ARGS:
-        connection:     The connection to listen.
-        client_address: The client's address, for log purposes only.
-        shutdown_timer: The scheduled shutdown timer that could be cancelled by the client's request.
-
-RETURN: NONE
-'''
 def listen(connection, client_address, shutdown_timer):
+    """
+    Continuous polling for data sent from the client using the given connection.
+    If the client wants to abort the shutdown timer, it will be cancelled.  
+
+    Keyword arguments:
+    connection      --- The connection to listen.
+    client_address  --- The client's address, for log purposes only.
+    shutdown_timer  --- The scheduled shutdown timer that could be cancelled by the client's request.
+    """
+
     print("     {} - Reading received data.".format(client_address))
 
     while True:
@@ -46,19 +45,20 @@ def listen(connection, client_address, shutdown_timer):
             connection.close()
             break
 
-'''
-INFO:   Schedules a new shutdown timer, using the schedule time that has been set in the config.py file.
-        The schedule_idx arguments defines wich item must be used (overflows will start again from the begining).
+def schedule(schedule_idx=0):  
+    """
+    Schedules a new shutdown timer, using the schedule time that has been set in the config.py file.
+    The schedule_idx arguments defines wich item must be used (overflows will start again from the begining).
 
-ARGS:   
-        schedule_idx:   The item that will be used for schedulling a new shutdown event, the list containing these definition
-                        can be found in the shared/config.py file.
+    Keyword arguments:
+    schedule_idx    --- The item that will be used for schedulling a new shutdown event (default 0).
+                        The list containing these definition can be found in the shared/config.py file.
 
-RETURN:
-        shd_time:   The scheduled shutdown time.
-        shd_timer:  The shutdown timer used for schedulling.
-'''
-def schedule(schedule_idx=0):    
+    Return:
+    shd_time    ---  The scheduled shutdown time.
+    shd_timer   ---  The shutdown timer used for schedulling.
+    """ 
+
     print("Setting up the shutdown event:", end='')
 
     schedule_idx = schedule_idx % len(Config.SHUTDOWN_TIMES)
@@ -77,16 +77,15 @@ def schedule(schedule_idx=0):
 
     return shd_time, shd_timer
 
-'''
-INFO:   Blocks the process till a new connection has been stablished by the client, opening a new thread in order to handle it.
-
-ARGS:
-        sock:       The socket used for the communication.
-        shd_timer:  The scheduled shutdown timer.
-
-RETURN: NONE
-'''
 def listen(sock, shd_timer):
+    """
+    Blocks the process till a new connection has been stablished by the client, opening a new thread in order to handle it.
+
+    Keyword arguments:
+    sock        ---  The socket used for the communication.
+    shd_timer   ---  The scheduled shutdown timer.
+    """
+
     connection, client_address = sock.accept()
 
     print("     {} - New connection received.".format(client_address))
