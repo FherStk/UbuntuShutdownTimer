@@ -3,8 +3,8 @@ from shared.config import Config
 
 class Connection():
 
-    SERVER = Config.SERVER
-    PORT = Config.PORT
+    SERVER:str = Config.SERVER
+    PORT:str = Config.PORT
 
     @staticmethod
     def create():
