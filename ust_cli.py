@@ -23,7 +23,7 @@ def warning(connection, shd_time, popup):
     if(popup == popup.SILENT): print("     No warning message will be prompted so the shutdown event will raise on silent mode.", end='\n\n')
     else:
         print("     Displaying the warning popup, so the user will be able to abort the shutdown on demand (or only warned about it).")
-        text = "Aquest ordinador s'apagarà automàticament a les <b>{}</b>.".format(shd_time.strftime('%H:%M:%S'))
+        text = "Aquest ordinador s'apagarà automàticament a les <b>{}</b>.".format(Utils.dateTimeToStr(shd_time, Utils.TIMEFORMAT))
         noOutput = ">/dev/null 2>&1"
 
         if(popup == popup.INFO): action = os.system('zenity --notification --no-wrap --text="{}" {}', text, noOutput)
@@ -31,7 +31,7 @@ def warning(connection, shd_time, popup):
             action = os.system('zenity --question --no-wrap --text="{}" {}'.format(text + " \nDesitja anul·lar l'aturada automàtica?", noOutput))            
             if action == 256: 
                 print("     The user decided to continue with the scheduled shutdown event.", end='\n\n')                     
-                os.system('zenity --notification --text="{}" {}'.format("Apagada automàtica a les {}".format(shd_time.strftime('%H:%M:%S')), noOutput))
+                os.system('zenity --notification --text="{}" {}'.format("Apagada automàtica a les {}".format(Utils.dateTimeToStr(shd_time, Utils.TIMEFORMAT)), noOutput))
 
             else:                
                 print("     The user decided to abort the scheduled shutdown event.", end='\n\n')         
@@ -42,8 +42,8 @@ def requestInfo(connection):
     try: 
         print("     Requesting for the next shutdown time... ", end='')
         connection.sendall(b"TIME")        
-        shd_time = connection.recv(1024).decode("ascii")
-        print("OK: {}".format(shd_time.strftime('%H:%M:%S')))   
+        shd_time = Utils.strToDateTime(connection.recv(1024).decode("ascii"))
+        print("OK: {}".format(Utils.dateTimeToStr(shd_time, Utils.TIMEFORMAT)))   
 
         print("     Requesting for the next warning popup type... ", end='')
         connection.sendall(b"POPUP")        
@@ -65,7 +65,7 @@ def setupWarning(connection, shd_time, popup):
     wrn_timer.start()
     
     print(" OK")      
-    print("     The warning popup has been scheduled on {}".format(wrn_time.strftime('%H:%M:%S')), end='\n\n')                     
+    print("     The warning popup has been scheduled on {}".format(Utils.dateTimeToStr(wrn_time, Utils.TIMEFORMAT)), end='\n\n')                     
 
     return wrn_timer
 

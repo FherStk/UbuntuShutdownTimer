@@ -1,5 +1,5 @@
 import threading
-from shared.scheduleInfo import Popup
+from shared.popup import Popup
 
 class ScheduleInfo():
     time = None

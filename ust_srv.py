@@ -1,17 +1,17 @@
 from shared.popup import Popup
 from shared.config import Config
-from shared.config import ScheduleInfo
+from shared.scheduleInfo import ScheduleInfo
 from shared.connection import Connection
 from shared.utils import Utils
 from typing import Tuple, List
+from socket import socket
 import threading
 import datetime
-import socket
 import sys
 import os
 
 class Server():
-    CONNECTIONS = List[Tuple[socket, str]]
+    CONNECTIONS = [] #array of tuples (socket, str)
     SHUTDOWN:ScheduleInfo = None
 
     def shutdown(self):
@@ -36,7 +36,7 @@ class Server():
 
     def refresh(self):
         print("\nSending the refresh broadcast message to all the clients:")
-        for connection, client_address in self.CONNECTIONS:
+        for (connection, client_address) in self.CONNECTIONS:
             print("     Sending message to {}... ".format(client_address), end='')
             
             try:
@@ -65,7 +65,7 @@ class Server():
             if data:
                 if(data == b"TIME"):
                     print("     {} -  Shutdown time requested, sending back the current scheduled shutdown time.".format(client_address))
-                    connection.sendall(self.SHUTDOWN.time.encode("ascii"))
+                    connection.sendall(Utils.dateTimeToStr(self.SHUTDOWN.time).encode("ascii"))
 
                 if(data == b"POPUP"):
                     print("     {} -  Popup type requested, sending back the current warning popup type.".format(client_address))
@@ -101,11 +101,11 @@ class Server():
         schedule_idx = schedule_idx % len(Config.SHUTDOWN_TIMES)
         sdt = Config.SHUTDOWN_TIMES[schedule_idx]    
         shd_time = Utils.getSchedulableDateTime(sdt["time"])
-        shd_timer = threading.Timer((shd_time - datetime.datetime.now()).total_seconds(), shutdown)  
+        shd_timer = threading.Timer((shd_time - datetime.datetime.now()).total_seconds(), self.shutdown)  
         shd_timer.start()
 
         print(" OK")
-        print("     The shutdown has been scheduled on {}".format(shd_time.strftime('%H:%M:%S')), end='\n\n')
+        print("     The shutdown has been scheduled on {}".format(Utils.dateTimeToStr(shd_time, Utils.TIMEFORMAT)), end='\n\n')
 
         self.SHUTDOWN = ScheduleInfo(shd_time, shd_timer, sdt["popup"])
         
@@ -122,8 +122,8 @@ class Server():
             #Step 5.2: return to step 1 
 
         while True:
-            schedule(schedule_idx+1)        
-            refresh()
+            self.schedule(schedule_idx+1)        
+            self.refresh()
 
             print("Waiting for connections:")
             while self.SHUTDOWN.timer.isAlive():
@@ -133,10 +133,10 @@ class Server():
                 self.CONNECTIONS.append((connection, client_address))         
 
                 print("     {} - Starting a new listening thread.".format(client_address))
-                thread = threading.Thread(target=listen, args=(connection, client_address))
+                thread = threading.Thread(target=self.listen, args=(connection, client_address))
                 thread.start()
 
-    def main(self):    
+    def start(self):    
         print("Ubuntu Shutdown Timer (SERVER) - v0.2.0.0")
         print("Copyright (C) Fernando Porrino Serrano")
         print("Under the GNU General Public License v3.0")
@@ -151,7 +151,7 @@ class Server():
         print("     Starting ready and listening on {} port {}".format(Connection.SERVER, Connection.PORT), end='\n\n')    
         
         try:
-            handle_connections(sock)
+            self.handle_connections(sock)
 
         except Exception as e:
             print("     EXCEPTION: {}.".format(e))
@@ -160,5 +160,6 @@ class Server():
             sock.close()
             print("     Server stopped")
 
-    if __name__ == "__main__":
-        main()
+if __name__ == "__main__":
+    srv = Server()
+    srv.start()
