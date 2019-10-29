@@ -69,7 +69,7 @@ class Server():
 
                 if(data == b"POPUP"):
                     print("     {} -  Popup type requested, sending back the current warning popup type.".format(client_address))
-                    connection.sendall(self.SHUTDOWN.popup.encode("ascii"))
+                    connection.sendall("{}".format(self.SHUTDOWN.popup).encode("ascii"))
 
                 elif(data == b"ABORT"):
                     print("     {} - Abort requested, so the shutdown event will be aborted.".format(client_address))

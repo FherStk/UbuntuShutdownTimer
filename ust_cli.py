@@ -48,7 +48,7 @@ def requestInfo(connection):
         print("     Requesting for the next warning popup type... ", end='')
         connection.sendall(b"POPUP")        
         popup = connection.recv(1024).decode("ascii")
-        print("OK: {}".format(popup))        
+        print("OK: {}".format(popup), end='\n\n')        
 
         return shd_time, popup
 
@@ -59,7 +59,6 @@ def requestInfo(connection):
 def setupWarning(connection, shd_time, popup):
     print("Setting up the warning event:", end='')
 
-    shd_time = Utils.getSchedulableDateTime(shd_time)
     wrn_time = shd_time - datetime.timedelta(minutes = Config.WARNING_BEFORE_SHUTDOWN)
     wrn_timer = threading.Timer((wrn_time - datetime.datetime.now()).total_seconds(), warning,  [connection, shd_time, popup])  
     wrn_timer.start()

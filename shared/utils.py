@@ -1,4 +1,3 @@
-from shared.config import Config
 import datetime
 
 class Utils():
@@ -16,11 +15,11 @@ class Utils():
         return dt
 
     @staticmethod
-    def strToDateTime(str, format=Utils.DATETIMEFORMAT):        
+    def strToDateTime(str, format=DATETIMEFORMAT):        
         dt = datetime.datetime.strptime(str, format)        
         return dt
 
     @staticmethod
-    def dateTimeToStr(dt, format=Utils.DATETIMEFORMAT):        
+    def dateTimeToStr(dt, format=DATETIMEFORMAT):        
         dt = dt.strftime(format)
         return dt
