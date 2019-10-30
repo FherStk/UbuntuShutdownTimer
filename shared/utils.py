@@ -5,9 +5,9 @@ class Utils():
     TIMEFORMAT = "%H:%M:%S"
 
     @staticmethod
-    def getSchedulableDateTime(str):
+    def getSchedulableDateTime(txt):
         now = datetime.datetime.now()
-        dt = Utils.strToDateTime(str, Utils.TIMEFORMAT)
+        dt = Utils.strToDateTime(txt, Utils.TIMEFORMAT)
         
         dt = dt.replace(year=now.year, month=now.month, day=now.day)
         if dt < datetime.datetime.now(): dt = dt + datetime.timedelta(days = 1)
@@ -15,11 +15,11 @@ class Utils():
         return dt
 
     @staticmethod
-    def strToDateTime(str, format=DATETIMEFORMAT):        
-        dt = datetime.datetime.strptime(str, format)        
+    def strToDateTime(txt, format=DATETIMEFORMAT):        
+        dt = datetime.datetime.strptime(txt, format)        
         return dt
 
     @staticmethod
     def dateTimeToStr(dt, format=DATETIMEFORMAT):        
-        dt = dt.strftime(format)
-        return dt
+        txt = dt.strftime(format)
+        return txt

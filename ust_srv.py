@@ -17,16 +17,16 @@ class Server():
         """
         Closes all the open connections and shuts down the computer.        
         """
-
-        print("\nClosing open connections...")
+        print("\nShutdown event started:")
+        print("     Closing open connections...")
         for connection, client_address in self.CONNECTIONS:
-            print("     Closing open connection with client {}... ".format(client_address), end='')
+            print("         Closing open connection with client {}... ".format(client_address), end='')
             
             try:
                 connection.close()            
                 print("OK")
             except Exception as e:
-                print("     EXCEPTION: {}.".format(e))
+                print("EXCEPTION: {}.".format(e))
 
         print("\nShutting down!")
         #os.system('systemctl poweroff')
@@ -59,23 +59,27 @@ class Server():
         print("     {} - Reading received data.".format(client_address))
 
         while True:
-            data = connection.recv(1024)  
+            try:
+                data = connection.recv(1024)  
 
-            if data:
-                if(data == b"TIME"):
-                    print("     {} - Shutdown time requested, sending back the current scheduled shutdown time.".format(client_address))
-                    connection.sendall(Utils.dateTimeToStr(self.SHUTDOWN.time).encode("ascii"))
+                if data:
+                    if(data == b"TIME"):
+                        print("     {} - Shutdown time requested, sending back the current scheduled shutdown time.".format(client_address))
+                        connection.sendall(Utils.dateTimeToStr(self.SHUTDOWN.time).encode("ascii"))
 
-                if(data == b"POPUP"):
-                    print("     {} - Popup type requested, sending back the current warning popup type.".format(client_address))
-                    connection.sendall("{}".format(self.SHUTDOWN.popup).encode("ascii"))
+                    if(data == b"POPUP"):
+                        print("     {} - Popup type requested, sending back the current warning popup type.".format(client_address))
+                        connection.sendall("{}".format(self.SHUTDOWN.popup).encode("ascii"))
 
-                elif(data == b"ABORT"):
-                    print("     {} - Abort requested, so the shutdown event will be aborted.".format(client_address))
-                    self.SHUTDOWN.timer.cancel()
+                    elif(data == b"ABORT"):
+                        print("     {} - Abort requested, so the shutdown event will be aborted.".format(client_address))
+                        self.SHUTDOWN.timer.cancel()
 
-                else:
-                    print("     {} - Unexpected message received: {!r}".format(client_address, data))
+                    else:
+                        print("     {} - Unexpected message received: {!r}".format(client_address, data))
+            
+            except Exception as e:
+                print("EXCEPTION: {}".format(e))     
 
     def schedule(self, schedule_idx=0):
         """
@@ -91,14 +95,13 @@ class Server():
 
         print("Setting up the shutdown event:", end='')
         
-        #Next 2 lines for testing purposes only
-        now = datetime.datetime.now()
-        sdt = now + datetime.timedelta(minutes = Config.WARNING_BEFORE_SHUTDOWN)
+        schedule_idx = schedule_idx % len(Config.SHUTDOWN_TIMES)
+        sdt = Config.SHUTDOWN_TIMES[schedule_idx]                
 
-        #Next 2 lines for production purposes only
-        #schedule_idx = schedule_idx % len(Config.SHUTDOWN_TIMES)
-        #sdt = Config.SHUTDOWN_TIMES[schedule_idx]    
         shd_time = Utils.getSchedulableDateTime(sdt["time"])
+        #The next line is for testing purposes only (comment for production)
+        shd_time = datetime.datetime.now() + datetime.timedelta(minutes = Config.WARNING_BEFORE_SHUTDOWN)
+        #End of the test lines
         shd_timer = threading.Timer((shd_time - datetime.datetime.now()).total_seconds(), self.shutdown)  
         shd_timer.start()
 
@@ -130,15 +133,20 @@ class Server():
             self.refresh()
 
             print("Waiting for connections:")
-            while self.SHUTDOWN.timer.isAlive():
-                connection, client_address = sock.accept()
+            while self.SHUTDOWN.timer.isAlive():                
+                try:
+                    #TODO: sock.timeout not working?
+                    connection, client_address = sock.accept()
 
-                print("     {} - New connection stablished.".format(client_address))
-                self.CONNECTIONS.append((connection, client_address))         
+                    print("     {} - New connection stablished.".format(client_address))
+                    self.CONNECTIONS.append((connection, client_address))         
 
-                print("     {} - Starting a new listening thread.".format(client_address))
-                thread = threading.Thread(target=self.listen, args=(connection, client_address))
-                thread.start()
+                    print("     {} - Starting a new listening thread.".format(client_address))
+                    thread = threading.Thread(target=self.listen, args=(connection, client_address))
+                    thread.start()
+
+                except Exception as e:
+                    print("EXCEPTION: {}".format(e))     
 
     def start(self):    
         """

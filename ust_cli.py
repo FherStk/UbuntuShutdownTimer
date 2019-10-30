@@ -98,16 +98,18 @@ class Client:
         print("Listening for server messages")
 
         while self.WARNING.timer.is_alive():
-            data = self.CONNECTION.recv(1024)  
-
-            if data:
+            try:
+                data = self.CONNECTION.recv(1024)             
                 if(data == b"REFRESH"):
                     print("The server requested for a REFRESH, cancelling the warning event... ", end='')                
                     self.WARNING.timer.cancel()
                     print("OK")                
 
                 else:
-                    print("Unexpected message received from the server: {!r}".format(data))
+                    print("Unexpected message received from the server: {!r}".format(data))          
+
+            except Exception as e:
+                print("EXCEPTION: {}".format(e))     
 
     def start(self):   
         """
