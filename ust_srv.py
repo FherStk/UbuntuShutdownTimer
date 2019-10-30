@@ -3,7 +3,6 @@ from shared.config import Config
 from shared.scheduleInfo import ScheduleInfo
 from shared.connection import Connection
 from shared.utils import Utils
-from typing import Tuple, List
 from socket import socket
 import threading
 import datetime
@@ -16,11 +15,9 @@ class Server():
 
     def shutdown(self):
         """
-        Just shuts down the machine    
-
-        Keyword arguments:
-        connections --- All the open connections.
+        Closes all the open connections and shuts down the computer.        
         """
+
         print("\nClosing open connections...")
         for connection, client_address in self.CONNECTIONS:
             print("     Closing open connection with client {}... ".format(client_address), end='')
@@ -35,6 +32,10 @@ class Server():
         #os.system('systemctl poweroff')
 
     def refresh(self):
+        """
+        Sends a broadcast message to all the active connections, requesting them to ask for the next scheduled event.
+        """
+
         print("\nSending the refresh broadcast message to all the clients:")
         for (connection, client_address) in self.CONNECTIONS:
             print("     Sending message to {}... ".format(client_address), end='')
@@ -47,14 +48,12 @@ class Server():
 
     def listen(self, connection, client_address):
         """
-        Continuous polling for data sent from the client using the given connection.
+        Continuously polls for data sent from the client using the given connection.
         It can be used to ask for the shutdown times or for shutdown abort requests.    
 
         Keyword arguments:
         connection      --- The current connection to listen.
         client_address  --- The current connection's client's address (for log purposes only).
-        shd_time        --- The scheduled shutdown time.
-        shd_timer       --- The shutdown timer used for schedulling.
         """
 
         print("     {} - Reading received data.".format(client_address))
@@ -83,14 +82,11 @@ class Server():
         Schedules a new shutdown timer, using the schedule time that has been set in the config.py file.
         The schedule_idx arguments defines wich item must be used (overflows will start again from the begining).
 
+        The scheduled info will be stored into the SHUTDOWN:ScheduleInfo global var.
+
         Keyword arguments:
         schedule_idx    --- The item that will be used for schedulling a new shutdown event (default 0).
-                            The list containing these definition can be found in the shared/config.py file.
-        Return:
-        An ScheduleInfo object containing:
-            shd_time        --- The scheduled shutdown time.
-            shd_timer       --- The shutdown timer used for schedulling.
-            popup           --- The type of popup to display
+                            The list containing these definition can be found in the shared/config.py file.        
         """ 
 
         print("Setting up the shutdown event:", end='')
@@ -110,7 +106,13 @@ class Server():
         self.SHUTDOWN = ScheduleInfo(shd_time, shd_timer, sdt["popup"])
         
 
-    def handle_connections(self, sock):        
+    def handle_connections(self, sock):  
+        """
+        Each time a new connectin is requested through the socket, a new listen thread is started.
+
+        Keyword arguments:
+            sock --- The socket assigned for listening new connections.
+        """       
         schedule_idx = -1
 
         #Step 1: schedule next shutdown.
@@ -137,6 +139,18 @@ class Server():
                 thread.start()
 
     def start(self):    
+        """
+        Starts the server:
+
+        #Step 1: schedule next shutdown.
+        #Step 2: broadcast a refresh message for all connected clients (0 on firs loop)
+        #Step 3: listen for connections forever.        
+        #Step 4: a new connected client or one who received the refresh message will ask for the next scheduled shutdown time & popup type
+        #Step 5: when a a client requests to abort the scheduled shutdown
+            #Step 5.1: abort        
+            #Step 5.2: return to step 1 
+        """
+
         print("Ubuntu Shutdown Timer (SERVER) - v0.2.0.0")
         print("Copyright (C) Fernando Porrino Serrano")
         print("Under the GNU General Public License v3.0")
