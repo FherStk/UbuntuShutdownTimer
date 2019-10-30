@@ -63,11 +63,11 @@ class Server():
 
             if data:
                 if(data == b"TIME"):
-                    print("     {} -  Shutdown time requested, sending back the current scheduled shutdown time.".format(client_address))
+                    print("     {} - Shutdown time requested, sending back the current scheduled shutdown time.".format(client_address))
                     connection.sendall(Utils.dateTimeToStr(self.SHUTDOWN.time).encode("ascii"))
 
                 if(data == b"POPUP"):
-                    print("     {} -  Popup type requested, sending back the current warning popup type.".format(client_address))
+                    print("     {} - Popup type requested, sending back the current warning popup type.".format(client_address))
                     connection.sendall("{}".format(self.SHUTDOWN.popup).encode("ascii"))
 
                 elif(data == b"ABORT"):
@@ -91,11 +91,13 @@ class Server():
 
         print("Setting up the shutdown event:", end='')
         
-        #Next 2 lines for testing only purposes
-        #now = datetime.datetime.now()
-        #shd_time = now + datetime.timedelta(minutes = Config.WARNING_BEFORE_SHUTDOWN)
-        schedule_idx = schedule_idx % len(Config.SHUTDOWN_TIMES)
-        sdt = Config.SHUTDOWN_TIMES[schedule_idx]    
+        #Next 2 lines for testing purposes only
+        now = datetime.datetime.now()
+        sdt = now + datetime.timedelta(minutes = Config.WARNING_BEFORE_SHUTDOWN)
+
+        #Next 2 lines for production purposes only
+        #schedule_idx = schedule_idx % len(Config.SHUTDOWN_TIMES)
+        #sdt = Config.SHUTDOWN_TIMES[schedule_idx]    
         shd_time = Utils.getSchedulableDateTime(sdt["time"])
         shd_timer = threading.Timer((shd_time - datetime.datetime.now()).total_seconds(), self.shutdown)  
         shd_timer.start()
