@@ -20,13 +20,14 @@ class Server():
         print("\nShutdown event started:")
         print("     Closing open connections...")
         for connection, client_address in self.CONNECTIONS:
-            print("         Closing open connection with client {}... ".format(client_address), end='')
-            
-            try:
-                connection.close()            
-                print("OK")
-            except Exception as e:
-                print("EXCEPTION: {}.".format(e))
+            if(not connection._closed):
+                print("         Closing open connection with client {}... ".format(client_address), end='')
+                
+                try:
+                    connection.close()            
+                    print("OK")
+                except Exception as e:
+                    print("EXCEPTION: {}.".format(e))
 
         print("\nShutting down!")
         #os.system('systemctl poweroff')
@@ -70,11 +71,11 @@ class Server():
 
                 if data:
                     if(data == b"TIME"):
-                        print("     {} - Shutdown time requested, sending back the current scheduled shutdown time.".format(client_address))
+                        print("     {} - Shutdown time requested, sending back the current scheduled shutdown time: {}.".format(client_address, self.SHUTDOWN.time))
                         connection.sendall(Utils.dateTimeToStr(self.SHUTDOWN.time).encode("ascii"))
 
                     elif(data == b"POPUP"):
-                        print("     {} - Popup type requested, sending back the current warning popup type.".format(client_address))
+                        print("     {} - Popup type requested, sending back the current warning popup type: {}.".format(client_address, self.SHUTDOWN.popup))
                         connection.sendall("{}".format(self.SHUTDOWN.popup).encode("ascii"))
 
                     elif(data == b"ABORT"):

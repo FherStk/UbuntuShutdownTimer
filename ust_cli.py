@@ -47,6 +47,10 @@ class Client:
             if(self.WARNING.popup == Popup.INFO): action = os.system('zenity --notification --no-wrap --text="{}" {}', text, noOutput)
             else:
                 action = os.system('zenity --question --no-wrap --text="{}" {}'.format(text + " \nDesitja anul·lar l'aturada automàtica?", noOutput))            
+                #The following two lines are for testing purposes only and must be commented on production enviroments!
+                #action = 256
+                action = 0
+
                 if action == 256: 
                     print("     The user decided to continue with the scheduled shutdown event.", end='\n\n')                     
                     os.system('zenity --notification --text="{}" {}'.format("Apagada automàtica a les {}".format(Utils.dateTimeToStr(self.WARNING.time, Utils.TIMEFORMAT)), noOutput))
