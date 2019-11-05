@@ -25,7 +25,10 @@ class Client:
             print("OK")
                 
         except Exception as e:
-            print("EXCEPTION: {}".format(e))            
+            print("EXCEPTION: {}".format(e))
+
+        finally:
+            print("")
 
     def warning(self):
         """
@@ -49,7 +52,7 @@ class Client:
                     os.system('zenity --notification --text="{}" {}'.format("Apagada automàtica a les {}".format(Utils.dateTimeToStr(self.WARNING.time, Utils.TIMEFORMAT)), noOutput))
 
                 else:                
-                    print("     The user decided to abort the scheduled shutdown event.", end='\n\n')         
+                    print("     The user decided to abort the scheduled shutdown event.")         
                     os.system('zenity --notification --text="{}" {}'.format("Recordi apagar l'ordinador manualment. Gràcies.", noOutput))
                     self.abort()
 
@@ -62,12 +65,12 @@ class Client:
             print("     Requesting for the next shutdown time... ", end='')
             self.CONNECTION.sendall(b"TIME")        
             shd_time = Utils.strToDateTime(self.CONNECTION.recv(1024).decode("ascii"))
-            print("OK: {}".format(Utils.dateTimeToStr(shd_time, Utils.TIMEFORMAT)))   
+            print("OK [{}]".format(Utils.dateTimeToStr(shd_time, Utils.TIMEFORMAT)))   
 
             print("     Requesting for the next warning popup type... ", end='')
             self.CONNECTION.sendall(b"POPUP")        
             popup = self.CONNECTION.recv(1024).decode("ascii")
-            print("OK: {}".format(popup), end='\n\n')        
+            print("OK [{}]".format(popup), end='\n\n')        
 
             self.WARNING = ScheduleInfo(shd_time, None, popup)
 
@@ -95,21 +98,28 @@ class Client:
         It can be used to receive refresh events (next shutdown must be shceduled.)
         """
 
-        print("Listening for server messages")
+        print("Listening for server messages:")
 
         while self.WARNING.timer.is_alive():
             try:
                 data = self.CONNECTION.recv(1024)             
                 if(data == b"REFRESH"):
-                    print("The server requested for a REFRESH, cancelling the warning event... ", end='')                
+                    print("     The server requested for a REFRESH, cancelling the warning event... ", end='')                
                     self.WARNING.timer.cancel()
                     print("OK")                
 
                 else:
-                    print("Unexpected message received from the server: {!r}".format(data))          
+                    print("     Unexpected message received from the server: {!r}".format(data))          
 
             except Exception as e:
-                print("EXCEPTION: {}".format(e))     
+                #Catching different exceptions does not work...
+                if (e.args[0] != "timed out"): 
+                    print("      EXCEPTION: {}".format(e))       
+
+                    if(e.errno == 10054):
+                        #Connection closed by the client
+                        self.WARNING.timer.cancel()
+                        self.CONNECTION.close() 
 
     def start(self):   
         """
@@ -131,9 +141,10 @@ class Client:
 
         print("Connecting to the server on {} port {}:".format(Connection.SERVER, Connection.PORT))
         self.CONNECTION = Connection.join()
+        self.WARNING = ScheduleInfo(None, None, None)
 
         #listen has a loop inside and will remain looping till wrn_timer has been cancelled
-        while True:
+        while not self.CONNECTION._closed:
             self.requestInfo()    
             self.setupWarning()    
             self.listen()

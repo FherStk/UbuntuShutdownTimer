@@ -36,15 +36,21 @@ class Server():
         Sends a broadcast message to all the active connections, requesting them to ask for the next scheduled event.
         """
 
-        print("\nSending the refresh broadcast message to all the clients:")
-        for (connection, client_address) in self.CONNECTIONS:
-            print("     Sending message to {}... ".format(client_address), end='')
+        print("Sending the refresh broadcast message to all the clients:")
+        if(len(self.CONNECTIONS) == 0): print("     No clients connected.", end='\n\n')
+        else:
+            for (connection, client_address) in self.CONNECTIONS:
+                #It could be more elegant to removed closed connections, but it will increase the logic complexity. Because a little amount of closed connections are expected (almost zero), those will remain in the list.
+                if(not connection._closed):
+                    print("     Sending message to {}... ".format(client_address), end='')
+                    
+                    try:
+                        connection.sendall(b"REFRESH")
+                        print("OK")
+                    except Exception as e:
+                        print("     EXCEPTION: {}.".format(e))
             
-            try:
-                connection.sendall(b"REFRESH")
-                print("OK")
-            except Exception as e:
-                print("     EXCEPTION: {}.".format(e))
+            print("     Done", end='\n\n')
 
     def listen(self, connection, client_address):
         """
@@ -58,7 +64,7 @@ class Server():
 
         print("     {} - Reading received data.".format(client_address))
 
-        while True:
+        while not connection._closed:
             try:
                 data = connection.recv(1024)  
 
@@ -67,7 +73,7 @@ class Server():
                         print("     {} - Shutdown time requested, sending back the current scheduled shutdown time.".format(client_address))
                         connection.sendall(Utils.dateTimeToStr(self.SHUTDOWN.time).encode("ascii"))
 
-                    if(data == b"POPUP"):
+                    elif(data == b"POPUP"):
                         print("     {} - Popup type requested, sending back the current warning popup type.".format(client_address))
                         connection.sendall("{}".format(self.SHUTDOWN.popup).encode("ascii"))
 
@@ -79,7 +85,14 @@ class Server():
                         print("     {} - Unexpected message received: {!r}".format(client_address, data))
             
             except Exception as e:
-                print("EXCEPTION: {}".format(e))     
+                #Catching different exceptions does not work...
+                if (e.args[0] != "timed out"): 
+                    print("     {} - EXCEPTION: {}".format(client_address, e))
+                    
+                    if(e.errno == 10054):
+                        #Connection closed by the client
+                        connection.close()
+
 
     def schedule(self, schedule_idx=0):
         """
@@ -93,14 +106,14 @@ class Server():
                             The list containing these definition can be found in the shared/config.py file.        
         """ 
 
-        print("Setting up the shutdown event:", end='')
+        print("\nSetting up the shutdown event:", end='')
         
         schedule_idx = schedule_idx % len(Config.SHUTDOWN_TIMES)
         sdt = Config.SHUTDOWN_TIMES[schedule_idx]                
 
         shd_time = Utils.getSchedulableDateTime(sdt["time"])
         #The next line is for testing purposes only (comment for production)
-        shd_time = datetime.datetime.now() + datetime.timedelta(minutes = Config.WARNING_BEFORE_SHUTDOWN)
+        shd_time = datetime.datetime.now() + datetime.timedelta(minutes = 2)
         #End of the test lines
         shd_timer = threading.Timer((shd_time - datetime.datetime.now()).total_seconds(), self.shutdown)  
         shd_timer.start()
@@ -132,7 +145,7 @@ class Server():
             self.schedule(schedule_idx+1)        
             self.refresh()
 
-            print("Waiting for connections:")
+            print("Waiting for connections:", end='\n')
             while self.SHUTDOWN.timer.isAlive():                
                 try:
                     #TODO: sock.timeout not working?
@@ -146,7 +159,8 @@ class Server():
                     thread.start()
 
                 except Exception as e:
-                    print("EXCEPTION: {}".format(e))     
+                    #Catching different exceptions does not work...
+                    if (e.args[0] != "timed out"): print("EXCEPTION: {}".format(e))                         
 
     def start(self):    
         """
@@ -172,7 +186,7 @@ class Server():
         sock = Connection.create()
         sock.listen(0)
         print(" OK")
-        print("     Starting ready and listening on {} port {}".format(Connection.SERVER, Connection.PORT), end='\n\n')    
+        print("     Starting ready and listening on {} port {}".format(Connection.SERVER, Connection.PORT))    
         
         try:
             self.handle_connections(sock)

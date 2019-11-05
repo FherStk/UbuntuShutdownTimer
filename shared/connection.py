@@ -10,7 +10,7 @@ class Connection():
     def create():
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.bind((Config.SERVER, Config.PORT))
-        socket.setdefaulttimeout(5)
+        sock.settimeout(5)
         return sock
 
     @staticmethod
