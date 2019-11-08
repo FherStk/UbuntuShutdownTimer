@@ -9,6 +9,7 @@ import datetime
 import sys
 import os
 
+#TODO: write logs into a file
 class Server():
     CONNECTIONS = [] #array of tuples (socket, str)
     SHUTDOWN:ScheduleInfo = None
@@ -37,7 +38,7 @@ class Server():
                     print("EXCEPTION: {}.".format(e))
 
         print("\nShutting down!")
-        #os.system('systemctl poweroff')
+        os.system('systemctl poweroff')
 
     def refresh(self):
         """
@@ -119,9 +120,9 @@ class Server():
         sdt = Config.SHUTDOWN_TIMES[schedule_idx]                
 
         shd_time = Utils.getSchedulableDateTime(sdt["time"])
-        #The next line is for testing purposes only (comment for production)
-        shd_time = datetime.datetime.now() + datetime.timedelta(minutes = 2)
-        #End of the test lines
+        #Init: the next line is for testing purposes only (comment for production)
+        #shd_time = datetime.datetime.now() + datetime.timedelta(minutes = 2)
+        #End
         shd_timer = threading.Timer((shd_time - datetime.datetime.now()).total_seconds(), self.shutdown)  
         shd_timer.start()
 
@@ -187,7 +188,7 @@ class Server():
             #Step 5.2: return to step 1 
         """
 
-        print("Ubuntu Shutdown Timer (SERVER) - v0.2.0.0")
+        print("Ubuntu Shutdown Timer (SERVER) - v1.0.0.0")
         print("Copyright (C) Fernando Porrino Serrano")
         print("Under the GNU General Public License v3.0")
         print("https://github.com/FherStk/UbuntuShutdownTimer", end='\n\n')   

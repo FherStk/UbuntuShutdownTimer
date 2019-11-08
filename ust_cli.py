@@ -47,9 +47,10 @@ class Client:
             if(self.WARNING.popup == Popup.INFO): action = os.system('zenity --notification --no-wrap --text="{}" {}', text, noOutput)
             else:
                 action = os.system('zenity --question --no-wrap --text="{}" {}'.format(text + " \nDesitja anul·lar l'aturada automàtica?", noOutput))            
-                #The following two lines are for testing purposes only and must be commented on production enviroments!
+                #Init: the following two lines are for testing purposes only and must be commented on production enviroments!
                 #action = 256
                 #action = 0
+                #End
 
                 if action == 256: 
                     print("     The user decided to continue with the scheduled shutdown event.", end='\n\n')                     
@@ -138,7 +139,7 @@ class Client:
             #Step 5.1: ABORT: send the request to the server
         """
 
-        print("Ubuntu Shutdown Timer (CLIENT) - v0.2.0.0")
+        print("Ubuntu Shutdown Timer (CLIENT) - v1.0.0.0")
         print("Copyright (C) Fernando Porrino Serrano")
         print("Under the GNU General Public License v3.0")
         print("https://github.com/FherStk/UbuntuShutdownTimer", end='\n\n')          
