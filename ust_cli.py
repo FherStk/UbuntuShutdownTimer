@@ -6,6 +6,7 @@ from shared.scheduleInfo import ScheduleInfo
 from socket import socket
 import threading
 import datetime
+import time
 import sys
 import os
 
@@ -64,6 +65,9 @@ class Client:
     def requestInfo(self):  
         """
         Requests to the server for the current scheduled shutdown info (time and type).
+        Return:
+            True if ok (so the global var WARNING will contain the correct info).
+            False if some error ocurred (so the WARNING global var will be None). 
         """
 
         try: 
@@ -78,10 +82,12 @@ class Client:
             print("OK [{}]".format(popup), end='\n\n')        
 
             self.WARNING = ScheduleInfo(shd_time, None, popup)
+            return True
 
         except Exception as e:
             print("EXCEPTION: {}".format(e))     
-            return "" 
+            self.WARNING = None
+            return False
 
     def setupWarning(self):
         """
@@ -149,10 +155,11 @@ class Client:
         self.WARNING = ScheduleInfo(None, None, None)
 
         #listen has a loop inside and will remain looping till wrn_timer has been cancelled
-        while not self.CONNECTION._closed:
-            self.requestInfo()    
-            self.setupWarning()    
-            self.listen()
+        while not self.CONNECTION._closed:            
+            if(not self.requestInfo()): time.sleep(5)   
+            else:
+                self.setupWarning()    
+                self.listen()
 
 if __name__ == "__main__":
     c = Client()
