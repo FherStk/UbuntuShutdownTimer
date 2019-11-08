@@ -13,14 +13,21 @@ class Server():
     CONNECTIONS = [] #array of tuples (socket, str)
     SHUTDOWN:ScheduleInfo = None
 
+    def getOpenConnections(self):
+        return list(filter(lambda x: x[0]._closed == False, self.CONNECTIONS))
+
     def shutdown(self):
         """
         Closes all the open connections and shuts down the computer.        
         """
         print("\nShutdown event started:")
         print("     Closing open connections...")
-        for connection, client_address in self.CONNECTIONS:
-            if(not connection._closed):
+        
+        
+        cons = self.getOpenConnections()
+        if(len(cons) == 0): print("\n     No clients connected.")
+        else:
+            for connection, client_address in cons:                
                 print("         Closing open connection with client {}... ".format(client_address), end='')
                 
                 try:
@@ -38,17 +45,17 @@ class Server():
         """
 
         print("\nSending the refresh broadcast message to all the clients:", end='')
-        if(len(self.CONNECTIONS) == 0): print("\n     No clients connected.")
+        cons = self.getOpenConnections()
+        if(len(cons) == 0): print("\n     No clients connected.")
         else:
-            for (connection, client_address) in self.CONNECTIONS:
-                #It could be more elegant to removed closed connections, but it will increase the logic complexity. Because a little amount of closed connections are expected (almost zero), those will remain in the list.
-                if(not connection._closed):                    
-                    try:
-                        connection.sendall(b"REFRESH")
-                        print("\n     Message sent to {}.".format(client_address), end='')
+            for (connection, client_address) in cons:
+                #It could be more elegant to removed closed connections, but it will increase the logic complexity. Because a little amount of closed connections are expected (almost zero), those will remain in the list.          
+                try:
+                    connection.sendall(b"REFRESH")
+                    print("\n     Message sent to {}.".format(client_address), end='')
 
-                    except Exception as e:
-                        print("\n     Error sending message to {}. EXCEPTION: {}.".format(client_address, e), end='')
+                except Exception as e:
+                    print("\n     Error sending message to {}. EXCEPTION: {}.".format(client_address, e), end='')
             
             #For logging purposes
             print("")
@@ -144,7 +151,8 @@ class Server():
             self.refresh()
 
             #Please note the breakline at the beginning, this is done on purpose because the multihreading (otherwise different messages can appear on the same line).
-            if(len(self.CONNECTIONS) == 0):
+            cons = self.getOpenConnections()
+            if(len(cons) == 0):
                 print("\nWaiting for connections:", end='')
 
             while self.SHUTDOWN.timer.isAlive():                
@@ -189,7 +197,7 @@ class Server():
         print("Starting server:")    
         sock = Connection.create()
         sock.listen(0)
-        print("     Starting ready and listening on {} port {}".format(Connection.SERVER, Connection.PORT))    
+        print("     Server ready and listening on {} port {}".format(Connection.SERVER, Connection.PORT))    
         
         try:
             self.handle_connections(sock)

@@ -49,7 +49,7 @@ class Client:
                 action = os.system('zenity --question --no-wrap --text="{}" {}'.format(text + " \nDesitja anul·lar l'aturada automàtica?", noOutput))            
                 #The following two lines are for testing purposes only and must be commented on production enviroments!
                 #action = 256
-                action = 0
+                #action = 0
 
                 if action == 256: 
                     print("     The user decided to continue with the scheduled shutdown event.", end='\n\n')                     
