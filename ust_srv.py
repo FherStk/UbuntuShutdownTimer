@@ -11,7 +11,6 @@ import os
 
 #TODO:  write logs into a file
 #       hide zenity warning if another user tooked action (and inform about it)
-#       send the scheduled ID in order to avoid multi-skip
 
 class Server():
     CONNECTIONS = [] #array of tuples (socket, str)
