@@ -22,7 +22,7 @@ class Client:
         try:
             # Send data        
             print("     Sending the ABORT request to the server... ", end='')
-            self.CONNECTION.sendall(b"ABORT")
+            self.CONNECTION.sendall("ABORT#{}".format(self.WARNING.id).encode("ascii"))
             print("OK")
                 
         except Exception as e:
@@ -71,17 +71,15 @@ class Client:
         """
 
         try: 
-            print("     Requesting for the next shutdown time... ", end='')
-            self.CONNECTION.sendall(b"TIME")        
-            shd_time = Utils.strToDateTime(self.CONNECTION.recv(1024).decode("ascii"))
-            print("OK [{}]".format(Utils.dateTimeToStr(shd_time, Utils.TIMEFORMAT)))   
+            print("     Requesting for the next shutdown info: ")
+            self.CONNECTION.sendall(b"INFO")     
 
-            print("     Requesting for the next warning popup type... ", end='')
-            self.CONNECTION.sendall(b"POPUP")        
-            popup = self.CONNECTION.recv(1024).decode("ascii")
-            print("OK [{}]".format(popup), end='\n\n')        
+            info = (self.CONNECTION.recv(1024).decode("ascii")).split("#")            
+            print("           ID:    {}".format(info[0]))
+            print("           Time:  {}".format(info[1]))
+            print("           Popup: {}".format(info[2]), end='\n\n')
 
-            self.WARNING = ScheduleInfo(shd_time, None, popup)
+            self.WARNING = ScheduleInfo(info[0], Utils.strToDateTime(info[1], Utils.DATETIMEFORMAT), None, info[2])
             return True
 
         except Exception as e:
@@ -152,7 +150,7 @@ class Client:
 
         print("Connecting to the server on {} port {}:".format(Connection.SERVER, Connection.PORT))
         self.CONNECTION = Connection.join()
-        self.WARNING = ScheduleInfo(None, None, None)
+        self.WARNING = ScheduleInfo(0, None, None, None)
 
         #listen has a loop inside and will remain looping till wrn_timer has been cancelled
         while not self.CONNECTION._closed:            

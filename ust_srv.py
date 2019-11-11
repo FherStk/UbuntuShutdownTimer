@@ -9,7 +9,10 @@ import datetime
 import sys
 import os
 
-#TODO: write logs into a file
+#TODO:  write logs into a file
+#       hide zenity warning if another user tooked action (and inform about it)
+#       send the scheduled ID in order to avoid multi-skip
+
 class Server():
     CONNECTIONS = [] #array of tuples (socket, str)
     SHUTDOWN:ScheduleInfo = None
@@ -39,6 +42,9 @@ class Server():
 
         print("\nShutting down!")
         os.system('systemctl poweroff')
+        
+        #TODO: use dbus for shutting down? its important to protect the apt upgrade process.
+        #dbus-send --system --print-reply --dest=org.freedesktop.ConsoleKit /org/freedesktop/ConsoleKit/Manager org.freedesktop.ConsoleKit.Manager.Stop
 
     def refresh(self):
         """
@@ -75,20 +81,26 @@ class Server():
 
         while not connection._closed:
             try:
-                data = connection.recv(1024)  
+                data = connection.recv(1024).decode("ascii")  
 
                 if data:
-                    if(data == b"TIME"):
-                        print("\n     {} - Shutdown time requested, sending back the current scheduled shutdown time: {}.".format(client_address, Utils.dateTimeToStr(self.SHUTDOWN.time, Utils.TIMEFORMAT)), end='')
-                        connection.sendall(Utils.dateTimeToStr(self.SHUTDOWN.time).encode("ascii"))
+                    if(data == "INFO"):
+                        print("\n     {} - Shutdown info requested, sending back:".format(client_address), end='')
+                        print("\n           ID:    {}".format(self.SHUTDOWN.id, Utils.TIMEFORMAT), end='')
+                        print("\n           Time:  {}".format(Utils.dateTimeToStr(self.SHUTDOWN.time, Utils.DATETIMEFORMAT)), end='')
+                        print("\n           Popup: {}".format(self.SHUTDOWN.popup, Utils.TIMEFORMAT), end='')
 
-                    elif(data == b"POPUP"):
-                        print("\n     {} - Popup type requested, sending back the current warning popup type: {}.".format(client_address, self.SHUTDOWN.popup), end='')
-                        connection.sendall("{}".format(self.SHUTDOWN.popup).encode("ascii"))
+                        info = "{}#{}#{}".format(self.SHUTDOWN.id, Utils.dateTimeToStr(self.SHUTDOWN.time, Utils.DATETIMEFORMAT), self.SHUTDOWN.popup)
+                        connection.sendall(info.encode("ascii"))                    
 
-                    elif(data == b"ABORT"):
-                        print("\n     {} - Abort requested, so the shutdown event will be aborted.".format(client_address), end='')
-                        self.SHUTDOWN.timer.cancel()
+                    elif(data.startswith == "ABORT"): 
+                        id = data.split("#")[1]                       
+                        print("\n     {} - Abort requested for the ID={}:".format(client_address, id), end='')
+
+                        if(id != self.SHUTDOWN.id): print("\n       Unable to abort, ID missmatch ({} != {}).".format(id, self.SHUTDOWN.id), end='')
+                        else:
+                            self.SHUTDOWN.timer.cancel()
+                            print("\n       The abort event has been aborted.", end='')
 
                     else:
                         print("\n     {} - Unexpected message received: {!r}".format(client_address, data), end='')
@@ -126,10 +138,28 @@ class Server():
         shd_timer = threading.Timer((shd_time - datetime.datetime.now()).total_seconds(), self.shutdown)  
         shd_timer.start()
 
-        print("\n     The shutdown has been scheduled on {}".format(Utils.dateTimeToStr(shd_time, Utils.TIMEFORMAT)))
+        print("\n     The shutdown has been scheduled on {}".format(Utils.dateTimeToStr(shd_time, Utils.DATETIMEFORMAT)))
 
-        self.SHUTDOWN = ScheduleInfo(shd_time, shd_timer, sdt["popup"])
+        self.SHUTDOWN = ScheduleInfo(schedule_idx+1, shd_time, shd_timer, sdt["popup"])
         
+    def nearest_schedule_idx(self):
+        min = None
+        idx = 0
+        schedule_idx = 0        
+        now = datetime.datetime.now()
+
+        for x in Config.SHUTDOWN_TIMES:
+            time = Utils.getSchedulableDateTime(x["time"])
+            secs = (time - now).total_seconds()
+
+            if(min == None or (secs > 0 and secs < min)):
+                min = secs
+                idx = schedule_idx
+            
+            schedule_idx += 1
+
+        return idx
+
     def handle_connections(self, sock):  
         """
         Each time a new connectin is requested through the socket, a new listen thread is started.
@@ -137,7 +167,8 @@ class Server():
         Keyword arguments:
             sock --- The socket assigned for listening new connections.
         """       
-        schedule_idx = -1
+        #The first schedule_idx will be the nearest in time.
+        schedule_idx = self.nearest_schedule_idx()
 
         #Step 1: schedule next shutdown.
         #Step 2: broadcast a refresh message for all connected clients (0 on firs loop)
@@ -148,9 +179,10 @@ class Server():
             #Step 5.2: return to step 1 
 
         while True:
-            self.schedule(schedule_idx+1)        
+            self.schedule(schedule_idx)        
             self.refresh()
-
+            schedule_idx += 1
+            
             #Please note the breakline at the beginning, this is done on purpose because the multihreading (otherwise different messages can appear on the same line).
             cons = self.getOpenConnections()
             if(len(cons) == 0):
