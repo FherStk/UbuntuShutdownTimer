@@ -132,7 +132,7 @@ class Server():
         sdt = Config.SHUTDOWN_TIMES[schedule_idx]                
 
         shd_time = Utils.getSchedulableDateTime(sdt["time"])
-        if self.TEST: shd_time = datetime.datetime.now() + datetime.timedelta(minutes = 2)
+        if self.TEST: shd_time = datetime.datetime.now() + datetime.timedelta(minutes = 1)
         
         shd_timer = threading.Timer((shd_time - datetime.datetime.now()).total_seconds(), self.shutdown)  
         shd_timer.start()

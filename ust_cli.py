@@ -51,7 +51,9 @@ class Client:
             else:
                 #action = os.system('zenity --question --no-wrap --text="{}" {}'.format(text + " \nDesitja anul·lar l'aturada automàtica?", noOutput))            
                 proc = subprocess.Popen(['zenity --question --no-wrap --text="{}" {}'.format(text + " \nDesitja anul·lar l'aturada automàtica?", noOutput)], shell=True)
-                proc.wait()
+                #TODO: test the next line...
+                self.listen(proc) #hides the dialog if cancelled by another user                
+
                 #Init: the following two lines are for testing purposes only and must be commented on production enviroments!
                 #proc.returncode = 1
                 #proc.returncode = 0
@@ -107,7 +109,7 @@ class Client:
         print(" OK")      
         print("     The warning popup has been scheduled on {}".format(Utils.dateTimeToStr(wrn_time, Utils.TIMEFORMAT)), end='\n\n')                     
 
-    def listen(self):  
+    def listen(self, proc:subprocess.Popen = None):  
         """
         Continuously polls for data sent from the server using the given connection.
         It can be used to receive refresh events (next shutdown must be shceduled.)
@@ -115,13 +117,19 @@ class Client:
 
         print("Listening for server messages:")
 
-        while self.WARNING.timer.is_alive():
+        while self.WARNING.timer.is_alive() or (proc != None and proc.wait(0) == None):
             try:
                 data = self.CONNECTION.recv(1024)             
                 if(data == b"REFRESH"):
-                    print("     The server requested for a REFRESH, cancelling the warning event... ", end='')                
+                    print("     The server requested for a REFRESH:")
+                    print("         Cancelling the warning event...", end='')
                     self.WARNING.timer.cancel()
-                    print("OK")                
+                    print("OK")                                    
+                    
+                    if(proc != None): 
+                        print("         Hiding the dialog...", end='')
+                        proc.kill()                    
+                        print("OK")                
 
                 else:
                     print("     Unexpected message received from the server: {!r}".format(data))          
@@ -129,7 +137,7 @@ class Client:
             except Exception as e:
                 #Catching different exceptions does not work...
                 if (e.args[0] != "timed out"): 
-                    print("      EXCEPTION: {}".format(e))       
+                    print("         EXCEPTION: {}".format(e))       
 
                     if(e.errno == 10054):
                         #Connection closed by the client
