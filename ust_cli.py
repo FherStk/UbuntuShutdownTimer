@@ -4,11 +4,11 @@ from shared.connection import Connection
 from shared.utils import Utils
 from shared.scheduleInfo import ScheduleInfo
 from socket import socket
+import subprocess
 import threading
 import datetime
 import time
 import sys
-import os
 
 class Client:
     CONNECTION:socket = None
@@ -45,21 +45,27 @@ class Client:
             text = "Aquest ordinador s'apagarà automàticament a les <b>{}</b>.".format(Utils.dateTimeToStr(self.WARNING.time, Utils.TIMEFORMAT))
             noOutput = ">/dev/null 2>&1"
 
-            if(self.WARNING.popup == Popup.INFO): action = os.system('zenity --notification --no-wrap --text="{}" {}', text, noOutput)
+            if(self.WARNING.popup == Popup.INFO): 
+                #action = os.system('zenity --notification --no-wrap --text="{}" {}', text, noOutput)
+                proc = subprocess.Popen(['zenity --notification --no-wrap --text="{}" {}', text, noOutput], shell=True, stdout=None)
             else:
-                action = os.system('zenity --question --no-wrap --text="{}" {}'.format(text + " \nDesitja anul·lar l'aturada automàtica?", noOutput))            
+                #action = os.system('zenity --question --no-wrap --text="{}" {}'.format(text + " \nDesitja anul·lar l'aturada automàtica?", noOutput))            
+                proc = subprocess.Popen(['zenity --question --no-wrap --text="{}" {}'.format(text + " \nDesitja anul·lar l'aturada automàtica?", noOutput)], shell=True)
+                proc.wait()
                 #Init: the following two lines are for testing purposes only and must be commented on production enviroments!
-                #action = 256
-                #action = 0
+                #proc.returncode = 1
+                #proc.returncode = 0
                 #End
 
-                if action == 256: 
+                if proc.returncode == 1: 
                     print("     The user decided to continue with the scheduled shutdown event.", end='\n\n')                     
-                    os.system('zenity --notification --text="{}" {}'.format("Apagada automàtica a les {}".format(Utils.dateTimeToStr(self.WARNING.time, Utils.TIMEFORMAT)), noOutput))
+                    #os.system('zenity --notification --text="{}" {}'.format("Apagada automàtica a les {}".format(Utils.dateTimeToStr(self.WARNING.time, Utils.TIMEFORMAT)), noOutput))
+                    subprocess.Popen(['zenity --notification --text="{}" {}'.format("Apagada automàtica a les {}".format(Utils.dateTimeToStr(self.WARNING.time, Utils.TIMEFORMAT)), noOutput)], shell=True, stdout=None)
 
                 else:                
                     print("     The user decided to abort the scheduled shutdown event.")         
-                    os.system('zenity --notification --text="{}" {}'.format("Recordi apagar l'ordinador manualment. Gràcies.", noOutput))
+                    #os.system('zenity --notification --text="{}" {}'.format("Recordi apagar l'ordinador manualment. Gràcies.", noOutput))
+                    subprocess.Popen(['zenity --notification --text="{}" {}'.format("Recordi apagar l'ordinador manualment. Gràcies.", noOutput)], shell=True, stdout=None)
                     self.abort()
 
     def requestInfo(self):  

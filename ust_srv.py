@@ -15,6 +15,7 @@ import os
 class Server():
     CONNECTIONS = [] #array of tuples (socket, str)
     SHUTDOWN:ScheduleInfo = None
+    TEST = True #for developers test only
 
     def getOpenConnections(self):
         return list(filter(lambda x: x[0]._closed == False, self.CONNECTIONS))
@@ -40,7 +41,7 @@ class Server():
                     print("EXCEPTION: {}.".format(e))
 
         print("\nShutting down!")
-        os.system('systemctl poweroff')
+        if not self.TEST: os.system('systemctl poweroff')
         
         #TODO: use dbus for shutting down? its important to protect the apt upgrade process.
         #dbus-send --system --print-reply --dest=org.freedesktop.ConsoleKit /org/freedesktop/ConsoleKit/Manager org.freedesktop.ConsoleKit.Manager.Stop
@@ -131,9 +132,8 @@ class Server():
         sdt = Config.SHUTDOWN_TIMES[schedule_idx]                
 
         shd_time = Utils.getSchedulableDateTime(sdt["time"])
-        #Init: the next line is for testing purposes only (comment for production)
-        #shd_time = datetime.datetime.now() + datetime.timedelta(minutes = 2)
-        #End
+        if self.TEST: shd_time = datetime.datetime.now() + datetime.timedelta(minutes = 2)
+        
         shd_timer = threading.Timer((shd_time - datetime.datetime.now()).total_seconds(), self.shutdown)  
         shd_timer.start()
 
