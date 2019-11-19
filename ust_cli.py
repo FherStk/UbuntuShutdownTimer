@@ -27,7 +27,7 @@ class Client:
             print("OK")
                 
         except Exception as e:
-            print("EXCEPTION: {}".format(e))
+            self.handleException(e)
 
         finally:
             print("")
@@ -70,26 +70,33 @@ class Client:
         """
         Requests to the server for the current scheduled shutdown info (time and type).
         Return:
-            True if ok (so the global var WARNING will contain the correct info).
-            False if some error ocurred (so the WARNING global var will be None). 
+            0 if ok (so the global var WARNING will contain the correct info).
+            An integer greater than zero if not OK, it can be used in order to wait (using it as seconds)
         """
 
         try: 
             print("     Requesting for the next shutdown info: ")
             self.CONNECTION.sendall(b"INFO")     
+            info = (self.CONNECTION.recv(1024).decode("ascii")).split("#")                        
 
-            info = (self.CONNECTION.recv(1024).decode("ascii")).split("#")            
-            print("           ID:    {}".format(info[0]))
-            print("           Time:  {}".format(info[1]))
-            print("           Popup: {}".format(info[2]), end='\n\n')
+            #Must avoid setting up repeated info (when continuing with an scheduled shutdown)
+            if(self.WARNING == None or self.WARNING.id != info[0]): 
+                print("           ID:    {}".format(info[0]))
+                print("           Time:  {}".format(info[1]))
+                print("           Popup: {}".format(info[2]), end='\n\n')
 
-            self.WARNING = ScheduleInfo(info[0], Utils.strToDateTime(info[1], Utils.DATETIMEFORMAT), None, info[2])
-            return True
+                self.WARNING = ScheduleInfo(info[0], Utils.strToDateTime(info[1], Utils.DATETIMEFORMAT), None, info[2])
+                return 0
+
+            elif(self.WARNING != None and self.WARNING.id == info[0]): 
+                print("     The same shutdown info as the current one has been received.")
+                return (self.WARNING.time - datetime.datetime.now()).total_seconds()            
 
         except Exception as e:
-            print("EXCEPTION: {}".format(e))     
+            self.handleException(e)            
             self.WARNING = None
-            return False
+
+            return Config.TIMEOUT
 
     def setupWarning(self):
         """
@@ -133,12 +140,19 @@ class Client:
             except Exception as e:
                 #Catching different exceptions does not work...
                 if (e.args[0] != "timed out"): 
-                    print("         EXCEPTION: {}".format(e))       
+                    self.handleException(e, "         ")                    
 
-                    if(e.errno == 10054):
-                        #Connection closed by the client
-                        self.WARNING.timer.cancel()
-                        self.CONNECTION.close() 
+    def handleException(self, e:Exception, prefix:str = ""):
+        print("{}EXCEPTION: {}".format(prefix, e))
+
+        try:
+            if(e.errno == 10054 or e.errno == 32):
+                #Connection closed by the client
+                self.WARNING.timer.cancel()
+                self.CONNECTION.close() 
+        except:
+            #do nothing
+            return
 
     def start(self):   
         """
@@ -164,8 +178,12 @@ class Client:
         self.PROCESS = None
 
         #listen has a loop inside and will remain looping till wrn_timer has been cancelled
-        while not self.CONNECTION._closed:            
-            if(not self.requestInfo()): time.sleep(Config.TIMEOUT)   
+        while not self.CONNECTION._closed:          
+            t = self.requestInfo()     
+
+            if(t > 0): 
+                print("     Waiting for {} senconds till next request...".format(int(t)), end="\n\n")
+                time.sleep(t)   
             else:
                 self.setupWarning()    
                 self.listen()
