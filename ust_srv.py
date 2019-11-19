@@ -93,11 +93,11 @@ class Server():
                         info = "{}#{}#{}".format(self.SHUTDOWN.id, Utils.dateTimeToStr(self.SHUTDOWN.time, Utils.DATETIMEFORMAT), self.SHUTDOWN.popup)
                         connection.sendall(info.encode("ascii"))                    
 
-                    elif(data.startswith == "ABORT"): 
+                    elif(data.startswith("ABORT")): 
                         id = data.split("#")[1]                       
                         print("\n     {} - Abort requested for the ID={}:".format(client_address, id), end='')
 
-                        if(id != self.SHUTDOWN.id): print("\n       Unable to abort, ID missmatch ({} != {}).".format(id, self.SHUTDOWN.id), end='')
+                        if(id != str(self.SHUTDOWN.id)): print("\n       Unable to abort, ID missmatch ({} != {}).".format(id, self.SHUTDOWN.id), end='')
                         else:
                             self.SHUTDOWN.timer.cancel()
                             print("\n       The abort event has been aborted.", end='')
@@ -132,7 +132,7 @@ class Server():
         sdt = Config.SHUTDOWN_TIMES[schedule_idx]                
 
         shd_time = Utils.getSchedulableDateTime(sdt["time"])
-        if self.TEST: shd_time = datetime.datetime.now() + datetime.timedelta(minutes = 1)
+        if self.TEST: shd_time = datetime.datetime.now() + datetime.timedelta(minutes = 2)
         
         shd_timer = threading.Timer((shd_time - datetime.datetime.now()).total_seconds(), self.shutdown)  
         shd_timer.start()

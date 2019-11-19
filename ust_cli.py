@@ -13,6 +13,7 @@ import sys
 class Client:
     CONNECTION:socket = None
     WARNING:ScheduleInfo = None
+    PROCESS:subprocess.Popen = None
 
     def abort(self):    
         """
@@ -47,27 +48,22 @@ class Client:
 
             if(self.WARNING.popup == Popup.INFO): 
                 #action = os.system('zenity --notification --no-wrap --text="{}" {}', text, noOutput)
-                proc = subprocess.Popen(['zenity --notification --no-wrap --text="{}" {}', text, noOutput], shell=True, stdout=None)
+                subprocess.Popen(["zenity", "--notification", "--text={}".format(text)])
             else:
                 #action = os.system('zenity --question --no-wrap --text="{}" {}'.format(text + " \nDesitja anul·lar l'aturada automàtica?", noOutput))            
-                proc = subprocess.Popen(['zenity --question --no-wrap --text="{}" {}'.format(text + " \nDesitja anul·lar l'aturada automàtica?", noOutput)], shell=True)
-                #TODO: test the next line...
-                self.listen(proc) #hides the dialog if cancelled by another user                
+                if(self.PROCESS != None): self.PROCESS.kill()                
+                self.PROCESS = subprocess.Popen(["zenity", "--question", "--no-wrap", "--text=\n{}\nDesitja anul·lar l'aturada automàtica?".format(text)], stderr=subprocess.PIPE)
+                self.PROCESS.wait()                                
+                #self.listen(proc) #hides the dialog if cancelled by another user                                
 
-                #Init: the following two lines are for testing purposes only and must be commented on production enviroments!
-                #proc.returncode = 1
-                #proc.returncode = 0
-                #End
-
-                if proc.returncode == 1: 
-                    print("     The user decided to continue with the scheduled shutdown event.", end='\n\n')                     
-                    #os.system('zenity --notification --text="{}" {}'.format("Apagada automàtica a les {}".format(Utils.dateTimeToStr(self.WARNING.time, Utils.TIMEFORMAT)), noOutput))
-                    subprocess.Popen(['zenity --notification --text="{}" {}'.format("Apagada automàtica a les {}".format(Utils.dateTimeToStr(self.WARNING.time, Utils.TIMEFORMAT)), noOutput)], shell=True, stdout=None)
+                if self.PROCESS.returncode == 1: 
+                    print("     The user decided to continue with the scheduled shutdown event.", end='\n\n')                                                             
+                    subprocess.Popen(["zenity", "--notification", "--text=Apagada automàtica a les {}".format(Utils.dateTimeToStr(self.WARNING.time, Utils.TIMEFORMAT))])                    
 
                 else:                
                     print("     The user decided to abort the scheduled shutdown event.")         
                     #os.system('zenity --notification --text="{}" {}'.format("Recordi apagar l'ordinador manualment. Gràcies.", noOutput))
-                    subprocess.Popen(['zenity --notification --text="{}" {}'.format("Recordi apagar l'ordinador manualment. Gràcies.", noOutput)], shell=True, stdout=None)
+                    subprocess.Popen(["zenity", "--notification", "--text=Recordi apagar l'ordinador manualment. Gràcies"])
                     self.abort()
 
     def requestInfo(self):  
@@ -109,7 +105,7 @@ class Client:
         print(" OK")      
         print("     The warning popup has been scheduled on {}".format(Utils.dateTimeToStr(wrn_time, Utils.TIMEFORMAT)), end='\n\n')                     
 
-    def listen(self, proc:subprocess.Popen = None):  
+    def listen(self):  
         """
         Continuously polls for data sent from the server using the given connection.
         It can be used to receive refresh events (next shutdown must be shceduled.)
@@ -117,7 +113,7 @@ class Client:
 
         print("Listening for server messages:")
 
-        while self.WARNING.timer.is_alive() or (proc != None and proc.wait(0) == None):
+        while self.WARNING.timer.is_alive():
             try:
                 data = self.CONNECTION.recv(1024)             
                 if(data == b"REFRESH"):
@@ -126,9 +122,9 @@ class Client:
                     self.WARNING.timer.cancel()
                     print("OK")                                    
                     
-                    if(proc != None): 
+                    if(self.PROCESS != None): 
                         print("         Hiding the dialog...", end='')
-                        proc.kill()                    
+                        self.PROCESS.kill()
                         print("OK")                
 
                 else:
@@ -165,10 +161,11 @@ class Client:
         print("Connecting to the server on {} port {}:".format(Connection.SERVER, Connection.PORT))
         self.CONNECTION = Connection.join()
         self.WARNING = ScheduleInfo(0, None, None, None)
+        self.PROCESS = None
 
         #listen has a loop inside and will remain looping till wrn_timer has been cancelled
         while not self.CONNECTION._closed:            
-            if(not self.requestInfo()): time.sleep(5)   
+            if(not self.requestInfo()): time.sleep(Config.TIMEOUT)   
             else:
                 self.setupWarning()    
                 self.listen()

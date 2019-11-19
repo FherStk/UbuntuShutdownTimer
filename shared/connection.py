@@ -5,14 +5,17 @@ class Connection():
 
     SERVER:str = Config.SERVER
     PORT:str = Config.PORT
+    TIMEOUT:int = Config.TIMEOUT
 
     @staticmethod
     def create():
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.bind((Config.SERVER, Config.PORT))
-        sock.settimeout(5)
+        sock.bind((Connection.SERVER, Connection.PORT))
+        sock.settimeout(Connection.TIMEOUT)
         return sock
 
     @staticmethod
     def join():
-        return socket.create_connection((Config.SERVER, Config.PORT))
+        sock = socket.create_connection((Connection.SERVER, Connection.PORT))
+        sock.settimeout(Connection.TIMEOUT)
+        return sock
