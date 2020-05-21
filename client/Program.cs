@@ -1,8 +1,8 @@
 ﻿using System;
-using System.Net.Http;
+using System.Linq;
 using System.Threading.Tasks;
-using UST.Server;
 using Grpc.Net.Client;
+using UST.Server;
 
 namespace UST.Client
 {
@@ -10,18 +10,29 @@ namespace UST.Client
     {
         static async Task Main(string[] args)
         {
+            Console.Write("Starting UST Client... ");
             AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
-            
-            // The port number(5000) must match the port of the gRPC server.            
-            using var channel = GrpcChannel.ForAddress("http://localhost:5000");            
-            var client = new Service.ServiceClient(channel);
-            var reply = await client.SayHelloAsync(
-                new HelloRequest { Name = "GreeterClient" }
-            );
+            Console.WriteLine("OK");
 
-            Console.WriteLine("Greeting: " + reply.Message);
-            Console.WriteLine("Press any key to exit...");
-            Console.ReadKey();
+            var address = "http://localhost:5000";
+            Console.WriteLine("Connecting to '{0}'... ", address);
+            using var channel = GrpcChannel.ForAddress(address);            
+            var client = new Service.ServiceClient(channel);            
+            Console.WriteLine("OK");
+            
+            Console.WriteLine("Requesting for scheduled shutdown events... ");
+            var reply = await client.GetScheduleAsync(new GetScheduleRequest());
+            Console.WriteLine("OK");
+
+            //TODO: 
+            //      1. Schedule messages for the schedule received
+            //      2. When fired, request for cancellations
+            //          2.1. If still scheduled and not silent, display message (zenity)
+            //          2.2. Otherwise ignore
+            //      3. The user chooses an option
+            //          3.1. Abort: send abort request to the server
+            //          3.2. Otherwise ignore
+            //      4. GOTO 1            
         }
     }
 }

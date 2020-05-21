@@ -1,21 +1,22 @@
 syntax = "proto3";
-
+import "google/protobuf/timestamp.proto";
 option csharp_namespace = "UST.Server";
-
-package greet;
 
 // The service definition.
 service Service {
-  // Sends a greeting
-  rpc SayHello (HelloRequest) returns (HelloReply);
+  rpc GetSchedule(GetScheduleRequest) returns (Schedule);
 }
 
-// The request message containing the user's name.
-message HelloRequest {
-  string name = 1;
+message GetScheduleRequest {
 }
 
-// The response message containing the greetings.
-message HelloReply {
-  string message = 1;
+message Schedule {
+  enum Behaviour {
+    CANCELLABLE = 0;
+    INFORMATIVE = 1;
+    SILENT = 2;    
+  }
+
+  google.protobuf.Timestamp shutdown = 1;    
+  Behaviour behaviour = 2;
 }
