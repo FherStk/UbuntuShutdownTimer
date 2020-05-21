@@ -18,13 +18,10 @@
 
 using System;
 
-namespace UST
+namespace UST.Core
 {
-    class Program
+    class Client
     {
-        static void Main(string[] args)
-        {
-            Console.WriteLine("Hello World!");
-        }
+       
     }
 }

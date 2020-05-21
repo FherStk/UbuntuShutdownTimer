@@ -18,13 +18,14 @@
 
 using System;
 
-namespace UST
+namespace UST.Core
 {
-    class Program
+    class Server
     {
-        static void Main(string[] args)
-        {
-            Console.WriteLine("Hello World!");
+        public string Port {get; private set;}
+
+        public Server(){
+            
         }
     }
 }
