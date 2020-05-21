@@ -14,7 +14,7 @@ namespace UST.Server
         {
             _logger = logger;
 
-            //load the scheduled data
+            //load the scheduled data from the appsettings.json file
         }        
 
         public override Task<Schedule> GetSchedule(GetScheduleRequest request, ServerCallContext context)

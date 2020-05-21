@@ -13,7 +13,12 @@ namespace UST.Server
     {
         public static void Main(string[] args)
         {
-            CreateHostBuilder(args).Build().Run();
+            CreateHostBuilder(args).ConfigureAppConfiguration((hostingContext, config) =>
+            {
+                //TODO: set "Properties" or "Settings" as the folder where load "appsettings" to move them from root
+                // var path = Path.Combine(Directory.GetCurrentDirectory(), "path/to/files");
+                // config.AddKeyPerFile(directoryPath: path, optional: true);
+            }).Build().Run();
         }
 
         // Additional configuration is required to successfully run gRPC on macOS.
