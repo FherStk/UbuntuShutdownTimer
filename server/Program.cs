@@ -1,11 +1,7 @@
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
-using Microsoft.AspNetCore.Server.Kestrel.Core;
+using Microsoft.Extensions.Configuration;
 
 namespace UST.Server
 {
@@ -14,11 +10,12 @@ namespace UST.Server
         public static void Main(string[] args)
         {
             CreateHostBuilder(args).ConfigureAppConfiguration((hostingContext, config) =>
-            {
-                //TODO: set "Properties" or "Settings" as the folder where load "appsettings" to move them from root
-                // var path = Path.Combine(Directory.GetCurrentDirectory(), "path/to/files");
-                // config.AddKeyPerFile(directoryPath: path, optional: true);
+            {               
+                config.SetBasePath(Path.Combine(hostingContext.HostingEnvironment.ContentRootPath, "Settings"));               
             }).Build().Run();
+
+            //TODO: Read schedule config from settings
+            //ConfigurationManager.AppSettings
         }
 
         // Additional configuration is required to successfully run gRPC on macOS.
