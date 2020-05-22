@@ -8,7 +8,7 @@
             "name": "SERVER: .NET Core Launch (console)",
             "type": "coreclr",
             "request": "launch",
-            "preLaunchTask": "build",
+            "preLaunchTask": "build-server",            
             // If you have changed target frameworks, make sure to update the program path.
             "program": "${workspaceFolder}/server/bin/Debug/netcoreapp3.1/UST.Server.dll",
             "args": [],
@@ -21,7 +21,7 @@
             "name": "CLIENT: .NET Core Launch (console)",
             "type": "coreclr",
             "request": "launch",
-            "preLaunchTask": "build",
+            "preLaunchTask": "build-client",
             // If you have changed target frameworks, make sure to update the program path.
             "program": "${workspaceFolder}/client/bin/Debug/netcoreapp3.1/UST.Client.dll",
             "args": [],

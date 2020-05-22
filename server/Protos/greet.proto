@@ -11,12 +11,12 @@ message GetScheduleRequest {
 }
 
 message Schedule {
-  enum Behaviour {
+  enum Mode {
     CANCELLABLE = 0;
     INFORMATIVE = 1;
     SILENT = 2;    
   }
 
   google.protobuf.Timestamp shutdown = 1;    
-  Behaviour behaviour = 2;
+  Mode mode = 2;
 }

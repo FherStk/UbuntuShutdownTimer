@@ -10,12 +10,9 @@ namespace UST.Server
         public static void Main(string[] args)
         {
             CreateHostBuilder(args).ConfigureAppConfiguration((hostingContext, config) =>
-            {               
-                config.SetBasePath(Path.Combine(hostingContext.HostingEnvironment.ContentRootPath, "Settings"));               
+            {                               
+                config.SetBasePath(Path.Combine(hostingContext.HostingEnvironment.ContentRootPath, "Settings"));                                
             }).Build().Run();
-
-            //TODO: Read schedule config from settings
-            //ConfigurationManager.AppSettings
         }
 
         // Additional configuration is required to successfully run gRPC on macOS.
