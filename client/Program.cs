@@ -26,6 +26,12 @@ namespace UST.Client
             Console.WriteLine("   - Mode: {0}", reply.Mode.ToString());
             Console.WriteLine("   - Shutdown on: {0}", reply.Shutdown.ToString());
             
+            Console.Write("Requesting for the current shutdown event cancellation... ");
+            var reply2 = await client.CancelCurrentAsync(new CancelCurrentRequest(){ Guid = reply.Guid});
+            Console.WriteLine("OK:");
+            Console.WriteLine("   - GUID: {0}", reply2.Guid.ToString());
+            Console.WriteLine("   - Mode: {0}", reply2.Mode.ToString());
+            Console.WriteLine("   - Shutdown on: {0}", reply2.Shutdown.ToString());
 
             //TODO: 
             //      1. Schedule messages for the schedule received

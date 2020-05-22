@@ -5,9 +5,14 @@ option csharp_namespace = "UST.Server";
 // The service definition.
 service Service {
   rpc GetSchedule(GetScheduleRequest) returns (Schedule);
+  rpc CancelCurrent(CancelCurrentRequest) returns (Schedule);
 }
 
 message GetScheduleRequest {
+}
+
+message CancelCurrentRequest {
+  string guid = 1;
 }
 
 message Schedule {

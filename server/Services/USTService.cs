@@ -25,6 +25,12 @@ namespace UST.Server
         public override Task<Schedule> GetSchedule(GetScheduleRequest request, ServerCallContext context)
         {     
             return Task.FromResult(Shutdown.Instance.Current);
-        }      
+        }
+
+        public override Task<Schedule> CancelCurrent(CancelCurrentRequest request, ServerCallContext context)
+        {     
+            if(Shutdown.Instance.Current.Guid.Equals(request.Guid)) return Task.FromResult(Shutdown.Instance.Next());
+            else return Task.FromResult(Shutdown.Instance.Current);
+        }
     }
 }
