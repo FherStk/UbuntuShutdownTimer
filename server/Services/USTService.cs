@@ -24,11 +24,7 @@ namespace UST.Server
 
         public override Task<Schedule> GetSchedule(GetScheduleRequest request, ServerCallContext context)
         {     
-            var now = DateTime.SpecifyKind(DateTime.Now, DateTimeKind.Utc);
-            var next = Shutdown.Instance.Data.Select(x => (Schedule: x, TimeLeft: (x.Shutdown - now.ToTimestamp()).Seconds)).Where(x => x.TimeLeft > 0).OrderBy(x => x.TimeLeft).Select(x => x.Schedule).FirstOrDefault();
-            
-            //TODO: if null, repeat for tomorrow dates            
-            return Task.FromResult(next);
+            return Task.FromResult(Shutdown.Instance.Current);
         }      
     }
 }

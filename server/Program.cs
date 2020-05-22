@@ -1,18 +1,28 @@
+using System;
 using System.IO;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore;
+using Microsoft.Extensions.Logging;
 
 namespace UST.Server
 {
     public class Program
     {
         public static void Main(string[] args)
-        {
-            CreateHostBuilder(args).ConfigureAppConfiguration((hostingContext, config) =>
-            {                               
+        {   
+            var host = CreateHostBuilder(args).ConfigureAppConfiguration((hostingContext, config) =>{                               
                 config.SetBasePath(Path.Combine(hostingContext.HostingEnvironment.ContentRootPath, "Settings"));                                
-            }).Build().Run();
+            }).Build();
+
+            
+            var logger = (ILogger<Program>)host.Services.GetService(typeof(ILogger<Program>));
+            logger.LogInformation("Starting UST Server");
+
+            Shutdown.Instance.Load(host);  
+            Shutdown.Instance.Next();
+            host.Run();                
         }
 
         // Additional configuration is required to successfully run gRPC on macOS.
