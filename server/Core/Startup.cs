@@ -10,9 +10,8 @@ namespace UST.Server
     public class Startup
     {
         public Startup(IConfiguration configuration)
-        {
-            //Configuration = configuration;
-            //Load the scheduled data and store as singleton
+        {            
+           Shutdown.Instance.Load(configuration);
         }
 
         // This method gets called by the runtime. Use this method to add services to the container.

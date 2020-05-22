@@ -21,7 +21,11 @@ namespace UST.Client
             
             Console.Write("Requesting for the next shutdown event... ");
             var reply = await client.GetScheduleAsync(new GetScheduleRequest());
-            Console.WriteLine("OK [shutting down on {0}]", reply.Shutdown.ToString());
+            Console.WriteLine("OK:");
+            Console.WriteLine("   - GUID: {0}", reply.Guid.ToString());
+            Console.WriteLine("   - Mode: {0}", reply.Mode.ToString());
+            Console.WriteLine("   - Shutdown on: {0}", reply.Shutdown.ToString());
+            
 
             //TODO: 
             //      1. Schedule messages for the schedule received
