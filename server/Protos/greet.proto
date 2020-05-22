@@ -17,6 +17,7 @@ message Schedule {
     SILENT = 2;    
   }
 
-  google.protobuf.Timestamp shutdown = 1;    
-  Mode mode = 2;
+  string guid = 1;
+  google.protobuf.Timestamp shutdown = 2;    
+  Mode mode = 3;
 }

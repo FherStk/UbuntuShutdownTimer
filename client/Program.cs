@@ -14,14 +14,14 @@ namespace UST.Client
             Console.WriteLine("OK");
 
             var address = "http://localhost:5000";
-            Console.WriteLine("Connecting to '{0}'... ", address);
+            Console.Write("Connecting to '{0}'... ", address);
             using var channel = GrpcChannel.ForAddress(address);            
             var client = new Service.ServiceClient(channel);            
             Console.WriteLine("OK");
             
-            Console.WriteLine("Requesting for scheduled shutdown events... ");
+            Console.Write("Requesting for the next shutdown event... ");
             var reply = await client.GetScheduleAsync(new GetScheduleRequest());
-            Console.WriteLine("OK");
+            Console.WriteLine("OK [shutting down on {0}]", reply.Shutdown.ToString());
 
             //TODO: 
             //      1. Schedule messages for the schedule received
