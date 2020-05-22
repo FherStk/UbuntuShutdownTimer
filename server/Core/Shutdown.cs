@@ -79,7 +79,7 @@ namespace UST.Server
             }
             
             //###### INIT DEVEL (REMOVE ON PRODUCTION) ######
-            Current.Shutdown = DateTime.SpecifyKind(DateTime.Now.AddSeconds(15), DateTimeKind.Utc).ToTimestamp();    
+            Current.Shutdown = DateTime.SpecifyKind(DateTime.Now.AddSeconds(30), DateTimeKind.Utc).ToTimestamp();    
             //###### END  DEVEL (REMOVE ON PRODUCTION) ######
             CancelTask = new CancellationTokenSource();
             Task.Delay((int)(Current.Shutdown - now.ToTimestamp()).Seconds*1000, CancelTask.Token).ContinueWith(t =>

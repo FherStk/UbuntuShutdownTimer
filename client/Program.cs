@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Google.Protobuf.WellKnownTypes;
 using Grpc.Net.Client;
 using UST.Server;
 
@@ -25,13 +26,22 @@ namespace UST.Client
             Console.WriteLine("   - GUID: {0}", reply.Guid.ToString());
             Console.WriteLine("   - Mode: {0}", reply.Mode.ToString());
             Console.WriteLine("   - Shutdown on: {0}", reply.Shutdown.ToString());
-            
-            Console.Write("Requesting for the current shutdown event cancellation... ");
-            var reply2 = await client.CancelCurrentAsync(new CancelCurrentRequest(){ Guid = reply.Guid});
-            Console.WriteLine("OK:");
-            Console.WriteLine("   - GUID: {0}", reply2.Guid.ToString());
-            Console.WriteLine("   - Mode: {0}", reply2.Mode.ToString());
-            Console.WriteLine("   - Shutdown on: {0}", reply2.Shutdown.ToString());
+                                    
+            var now = DateTime.SpecifyKind(DateTime.Now.AddSeconds(-1), DateTimeKind.Utc);                
+            Console.Write("Schedulling the message box to rise on {0}... ", now.ToString());         
+            var t = Task.Delay((int)(reply.Shutdown - now.ToTimestamp()).Seconds*1000).ContinueWith(t =>
+            {                
+                Console.Write("BESSAGEBOX");
+            });
+            Console.WriteLine("OK:");            
+            await t;
+
+            // Console.Write("Requesting for the current shutdown event cancellation... ");
+            // var reply2 = await client.CancelCurrentAsync(new CancelCurrentRequest(){ Guid = reply.Guid});
+            // Console.WriteLine("OK:");
+            // Console.WriteLine("   - GUID: {0}", reply2.Guid.ToString());
+            // Console.WriteLine("   - Mode: {0}", reply2.Mode.ToString());
+            // Console.WriteLine("   - Shutdown on: {0}", reply2.Shutdown.ToString());
 
             //TODO: 
             //      1. Schedule messages for the schedule received
