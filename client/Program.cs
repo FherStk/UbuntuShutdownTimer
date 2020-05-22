@@ -8,7 +8,7 @@ namespace UST.Client
 {
     class Program
     {
-        static async Task Main(string[] args)
+        static void Main(string[] args)
         {
             Console.Write("Starting UST Client... ");
             AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
@@ -21,37 +21,39 @@ namespace UST.Client
             Console.WriteLine("OK");
             
             Console.Write("Requesting for the next shutdown event... ");
-            var reply = await client.GetScheduleAsync(new GetScheduleRequest());
-            Console.WriteLine("OK:");
-            Console.WriteLine("   - GUID: {0}", reply.Guid.ToString());
-            Console.WriteLine("   - Mode: {0}", reply.Mode.ToString());
-            Console.WriteLine("   - Shutdown on: {0}", reply.Shutdown.ToString());
-                                    
-            var now = DateTime.SpecifyKind(DateTime.Now.AddSeconds(-1), DateTimeKind.Utc);                
-            Console.Write("Schedulling the message box to rise on {0}... ", now.ToString());         
-            var t = Task.Delay((int)(reply.Shutdown - now.ToTimestamp()).Seconds*1000).ContinueWith(t =>
-            {                
-                Console.Write("BESSAGEBOX");
-            });
-            Console.WriteLine("OK:");            
-            await t;
+            var s = client.GetSchedule(new GetScheduleRequest());
+            Console.WriteLine("OK");
+            ScheduleMessage(client, s);        
+        }
 
-            // Console.Write("Requesting for the current shutdown event cancellation... ");
-            // var reply2 = await client.CancelCurrentAsync(new CancelCurrentRequest(){ Guid = reply.Guid});
-            // Console.WriteLine("OK:");
-            // Console.WriteLine("   - GUID: {0}", reply2.Guid.ToString());
-            // Console.WriteLine("   - Mode: {0}", reply2.Mode.ToString());
-            // Console.WriteLine("   - Shutdown on: {0}", reply2.Shutdown.ToString());
+        private static void ScheduleMessage(Service.ServiceClient client, Schedule s){
+            Console.WriteLine("   Scheduled shutdown server data:");
+            Console.WriteLine("   - GUID: {0}", s.Guid.ToString());
+            Console.WriteLine("   - Mode: {0}", s.Mode.ToString());
+            Console.WriteLine("   - Shutdown on: {0}", s.Shutdown.ToString());
 
-            //TODO: 
-            //      1. Schedule messages for the schedule received
-            //      2. When fired, request for cancellations
-            //          2.1. If still scheduled and not silent, display message (zenity)
-            //          2.2. Otherwise ignore
-            //      3. The user chooses an option
-            //          3.1. Abort: send abort request to the server
-            //          3.2. Otherwise ignore
-            //      4. GOTO 1            
+            var now = DateTime.SpecifyKind(DateTime.Now, DateTimeKind.Utc);       
+            //###### INIT DEVEL (REMOVE ON PRODUCTION) ######                          
+            s.Shutdown = DateTime.SpecifyKind(now.AddSeconds(5), DateTimeKind.Utc).ToTimestamp();          
+            //###### END  DEVEL (REMOVE ON PRODUCTION) ######      
+            Console.Write("Schedulling the message box to rise on {0} with GUID {1}... ", s.Shutdown, s.Guid);                        
+            var t = Task.Delay((int)(s.Shutdown - now.ToTimestamp()).Seconds*1000);
+            Console.WriteLine("OK");            
+
+            t.Wait();
+            Cancel(client, s);
+        }
+
+        private static void Cancel(Service.ServiceClient client, Schedule s){
+            Console.WriteLine("The user requests for cancellation over the scheduled shutdown on {0} with GUID {1}", s.Shutdown.ToString(), s.Guid); 
+            Console.Write("Requesting for the current shutdown event cancellation... ");
+            s = client.CancelCurrent(new CancelCurrentRequest(){ Guid = s.Guid});
+            Console.WriteLine("OK");
+            ScheduleMessage(client, s);
+        }
+
+        private static void Continue(Schedule s){
+            Console.WriteLine("The user accepts the scheduled shutdown on {0} with GUID {1}", s.Shutdown.ToString(), s.Guid);  
         }
     }
 }
