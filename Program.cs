@@ -57,7 +57,6 @@ namespace UST
             Console.WriteLine();
         }
 
-
         private static async Task Server(){  
             Console.WriteLine("Running on server mode:");
             Console.Write("  Setting up connection...     ");
@@ -74,31 +73,12 @@ namespace UST
                 Console.WriteLine("OK");
 
                 Console.WriteLine();
-                Console.WriteLine("Server ready and listening!");
-
-                // var dbusManager = connection.CreateProxy<IUST1>("net.xeill.elpuig.UST1", "/net/xeill/elpuig/UST1");
-                // await dbusManager.AddContactAsync("name", "email").ContinueWith((reply) => {
-                // if(reply.Exception == null) Console.WriteLine("Reply: {0}", reply.Result);
-                //     else Console.WriteLine("ERROR: {0}", reply.Exception.Message);
-                // });
+                Console.WriteLine("Server ready and listening!");             
                 
                 while (true) { 
                     await Task.Delay(int.MaxValue);
                 }
-            }
-           
-
-            // var server = new ServerConnectionOptions();
-            // using (var connection = new Connection(server))
-            // {                
-            //        
-            //     var boundAddress = await server.StartAsync("tcp:host=localhost");
-            //     System.Console.WriteLine($"Server listening at {boundAddress}");     
-
-            //     await Task.Delay(3600*1000).ContinueWith((t) => {
-            //         Console.WriteLine("Server closed");
-            //     });        
-            // }
+            }           
         }
         private static async Task Client(){
             Console.WriteLine("Running on client mode:");
@@ -118,36 +98,8 @@ namespace UST
             });
 
             await Task.Delay(int.MaxValue);
-
-            // Console.WriteLine("Running on client mode:");
-            // Console.Write("  Setting up connection...     ");
-            // using (var connection = new Connection(Address.System)){   
-            //     var info = await connection.ConnectAsync();                
-            //     Console.WriteLine("OK");
-
-            //     Console.Write("  Setting up dbus service...   ");
-            //     await connection.ActivateServiceAsync(_service);
-            //     Console.WriteLine("OK");    
-
-            //     Console.Write("  Setting up dbus interface... ");
-            //     await connection.RegisterObjectAsync(new UST1.DBus.Worker());
-            //     Console.WriteLine("OK");
-
-            //     Console.WriteLine();
-            //     Console.WriteLine("Client ready and listening!");
-
-            //     //dbus-send --system --print-reply --type=method_call --dest=net.xeill.elpuig.UST1 /net/xeill/elpuig/UST1 net.xeill.elpuig.UST1.Ping
-            //     var dbusManager = connection.CreateProxy<IUST1>(_service, string.Format("/{0}", _service.Replace(".", "/")));
-            //     await dbusManager.PingAsync().ContinueWith((reply) => {
-            //     if(reply.Exception == null) Console.WriteLine("Reply: {0}", reply.Result);
-            //         else Console.WriteLine("ERROR: {0}", reply.Exception.Message);
-            //     });
-                
-            //     while (true) { 
-            //         await Task.Delay(int.MaxValue);
-            //     }
-            // }
         }
+        
         private static async Task Config(){
             Console.WriteLine("Configuration requested: ", DateTime.Now.Year);
             var filename = "system-local.conf";
