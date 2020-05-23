@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -40,63 +41,75 @@ namespace UST1.DBus
 
     class Worker : IUST1
     {
+        private class Settings{
+            public Schedule[] Schedule {get; set;}
+        }
+
         public static readonly ObjectPath Path = new ObjectPath("/net/xeill/elpuig/UST1");
+        
         public static string Service {
             get{
                 return Path.ToString().Replace("/", ".").TrimStart('.');
             }
         } 
 
-        private List<Schedule> Data;        
+        private List<Schedule> _data;        
         
-        private class Settings{
-            public Schedule[] Schedule {get; set;}
-        }
+        private int _index;
+
+        private CancellationTokenSource _cancel;
+        
+        private Schedule _current{
+            get{
+                if(_data == null || _data.Count == 0 || _index < 0 || _index >= _data.Count) return null;
+                else return _data[_index];
+            }
+        }        
         
         public Worker(){
             var now = DateTime.Now;            
-            var data = JsonSerializer.Deserialize<Settings>(File.ReadAllText(System.IO.Path.Combine("settings", "settings.json")));
+            var json = JsonSerializer.Deserialize<Settings>(File.ReadAllText(System.IO.Path.Combine("settings", "settings.json")));
 
-            if(data.Schedule.Length == 0) throw new Exception("No data has been provided, please fill the setting.json file.");  
-            this.Data = data.Schedule.OrderBy(x => x.Shutdown).ToList();  
-            this.Data.ForEach(x => x.GUID = Guid.NewGuid());       
+            if(json.Schedule.Length == 0) throw new Exception("No data has been provided, please fill the setting.json file.");  
+            _data = json.Schedule.OrderBy(x => x.Shutdown).ToList();  
+            _data.ForEach(x => x.GUID = Guid.NewGuid());       
         }
 
-    //     private Schedule Next(){
-    //         //Cancelling the current one
-    //         if(CancelTask != null){
-    //             CancelTask.Cancel();
-    //             Logger.LogInformation($"Cancelling the scheduled shutdown event with GUID {Current.Guid}");  
-    //         }  
+        private Schedule Next(){
+            //Cancelling the current one
+            // if(CancelTask != null){
+            //     CancelTask.Cancel();
+            //     Logger.LogInformation($"Cancelling the scheduled shutdown event with GUID {Current.Guid}");  
+            // }  
 
-    //         //Get the next schedule
-    //         var now = DateTime.SpecifyKind(DateTime.Now, DateTimeKind.Utc);                 
-    //         for(Index = Index+1; Index < Schedule.Count(); Index++){                
-    //             if((Current.Shutdown - now.ToTimestamp()).Seconds > 0) break;
-    //         }
+            //Get the next schedule
+            var now = DateTime.Now;
+            for(_index = _index+1; _index < _data.Count(); _index++){                
+                if((_current.Shutdown - now).TotalMilliseconds > 0) break;
+            }
 
-    //         //If null, schedule for tomorrow
-    //         if(Current == null){
-    //             Index = 0;
-    //             Schedule.ForEach(x => x.Shutdown = x.Shutdown.ToDateTimeOffset().AddDays(1).ToTimestamp());                                
-    //         }
+            //If null, schedule for tomorrow
+            if(_current == null){
+                _index = 0;
+                _data.ForEach(x => x.Shutdown = x.Shutdown.AddDays(1));                                
+            }
             
-    //         //###### INIT DEVEL (REMOVE ON PRODUCTION) ######
-    //         //Current.Shutdown = DateTime.SpecifyKind(DateTime.Now.AddSeconds(30), DateTimeKind.Utc).ToTimestamp();    
-    //         //###### END  DEVEL (REMOVE ON PRODUCTION) ######
-    //         CancelTask = new CancellationTokenSource();
-    //         Task.Delay((int)(Current.Shutdown - now.ToTimestamp()).Seconds*1000, CancelTask.Token).ContinueWith(t =>
-    //         {
-    //             if(!t.IsCanceled){
-    //                 Logger.LogInformation($"Shutting down for scheduled event with GUID {Current.Guid}");  
-    //                 Logger.LogInformation("SHUTDOWN!");  
-    //             }
-    //         });
+            //###### INIT DEVEL (REMOVE ON PRODUCTION) ######
+            //Current.Shutdown = DateTime.SpecifyKind(DateTime.Now.AddSeconds(30), DateTimeKind.Utc).ToTimestamp();    
+            //###### END  DEVEL (REMOVE ON PRODUCTION) ######
+            _cancel = new CancellationTokenSource();
+            Task.Delay((int)(_current.Shutdown - now.ToTimestamp()).Seconds*1000, _cancel.Token).ContinueWith(t =>
+            {
+                if(!t.IsCanceled){
+                    Logger.LogInformation($"Shutting down for scheduled event with GUID {_current.Guid}");  
+                    Logger.LogInformation("SHUTDOWN!");  
+                }
+            });
             
-    //         Logger.LogInformation($"A new shutdown event has been successfully scheduled on {Current.Shutdown} for GUID {Current.Guid}");    
-    //         return Current;
-    //     }
-    //  }
+            Logger.LogInformation($"A new shutdown event has been successfully scheduled on {_current.Shutdown} for GUID {_current.Guid}");    
+            return Current;
+        }
+     
     
 
         public Task<Schedule> RequestScheduleAsync()
