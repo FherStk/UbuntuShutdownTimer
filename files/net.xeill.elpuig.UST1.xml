@@ -22,5 +22,17 @@
         </doc:description>
       </doc:doc>
     </method>
+    <method name="Ping">
+      <arg name="pong" direction="out" type="s">
+        <doc:doc><doc:summary>Returned "pong" string</doc:summary></doc:doc>
+      </arg>     
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Pings to request a "pong"
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+    </method>
   </interface>
 </node>

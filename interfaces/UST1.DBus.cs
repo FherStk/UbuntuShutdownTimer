@@ -11,6 +11,7 @@ namespace UST1.DBus
     interface IUST1 : IDBusObject
     {
         Task<uint> AddContactAsync(string Name, string Email);
+        Task<string> PingAsync();
     }
 
     class Worker : IUST1
@@ -19,7 +20,14 @@ namespace UST1.DBus
 
         public Task<uint> AddContactAsync(string Name, string Email)
         {
+            Console.WriteLine("REQUEST!");
             return Task.FromResult((uint)27);
+        }
+
+        public Task<string> PingAsync()
+        {
+            Console.WriteLine("REQUEST!");
+            return Task.FromResult("pong");
         }
 
         public ObjectPath ObjectPath { get { return Path; } }

@@ -31,6 +31,7 @@ namespace UST
 {   
     class Program
     {
+        private static string _service = "net.xeill.elpuig.UST1";
         static async Task Main(string[] args)
         {
             Console.WriteLine();
@@ -49,80 +50,119 @@ namespace UST
                 else Help();
             }
             catch(Exception ex){
-                Console.WriteLine("ERROR: ");
-                Console.WriteLine(ex.Message);
-                Console.WriteLine("Details: ", ex.StackTrace);
+                Console.WriteLine("ERROR: {0}", ex.Message);
+                Console.WriteLine("Details: {0}", ex.StackTrace);
             } 
 
             Console.WriteLine();
-            
-
-            // Console.WriteLine("Monitoring network state changes. Press Ctrl-C to stop.");
-
-            // var systemConnection = Connection.System;
-            // var networkManager = systemConnection.CreateProxy<IManager>("org.freedesktop.network1", "/org/freedesktop/network1");
-
-            // // foreach (var device in await networkManager.)
-            // // {
-            // //     var interfaceName = await device.GetInterfaceAsync();
-            // //     await device.WatchStateChangedAsync(
-            // //         change => Console.WriteLine($"{interfaceName}: {change.oldState} -> {change.newState}")
-            // //     );
-            // // }
-
-            // await Task.Delay(int.MaxValue);
         }
 
 
-        private static async Task Server(){
-            var server = new ServerConnectionOptions();
-            using (var connection = new Connection(server))
-            {
-                await connection.RegisterObjectAsync(new UST1.DBus.Worker());   
-                var boundAddress = await server.StartAsync("tcp:host=localhost");
-                System.Console.WriteLine($"Server listening at {boundAddress}");     
+        private static async Task Server(){  
+            Console.WriteLine("Running on server mode:");
+            Console.Write("  Setting up connection...     ");
+            using (var connection = new Connection(Address.System)){   
+                var info = await connection.ConnectAsync();                
+                Console.WriteLine("OK");
 
-                await Task.Delay(3600*1000).ContinueWith((t) => {
-                    Console.WriteLine("Server closed");
-                });        
+                Console.Write("  Setting up dbus service...   ");
+                await connection.RegisterServiceAsync(_service);
+                Console.WriteLine("OK");    
+
+                Console.Write("  Setting up dbus interface... ");
+                await connection.RegisterObjectAsync(new UST1.DBus.Worker());
+                Console.WriteLine("OK");
+
+                Console.WriteLine();
+                Console.WriteLine("Server ready and listening!");
+
+                // var dbusManager = connection.CreateProxy<IUST1>("net.xeill.elpuig.UST1", "/net/xeill/elpuig/UST1");
+                // await dbusManager.AddContactAsync("name", "email").ContinueWith((reply) => {
+                // if(reply.Exception == null) Console.WriteLine("Reply: {0}", reply.Result);
+                //     else Console.WriteLine("ERROR: {0}", reply.Exception.Message);
+                // });
+                
+                while (true) { 
+                    await Task.Delay(int.MaxValue);
+                }
             }
+           
+
+            // var server = new ServerConnectionOptions();
+            // using (var connection = new Connection(server))
+            // {                
+            //        
+            //     var boundAddress = await server.StartAsync("tcp:host=localhost");
+            //     System.Console.WriteLine($"Server listening at {boundAddress}");     
+
+            //     await Task.Delay(3600*1000).ContinueWith((t) => {
+            //         Console.WriteLine("Server closed");
+            //     });        
+            // }
         }
         private static async Task Client(){
-            var systemConnection = Connection.System;
-            var dbusManager = systemConnection.CreateProxy<IUST1>("net.xeill.elpuig.UST1", "/net/xeill/elpuig/UST1");
-            await dbusManager.AddContactAsync("name", "email").ContinueWith((reply) => {
+            Console.WriteLine("Running on client mode:");
+
+            Console.Write("  Setting up connection...       ");
+            var connection = Connection.System;
+            Console.WriteLine("OK");
+            
+            Console.Write("  Conneting to dbus interface... ");
+            var ust = connection.CreateProxy<IUST1>(_service, string.Format("/{0}", _service.Replace(".", "/")));
+            Console.WriteLine("OK");
+            Console.WriteLine();
+
+            await ust.PingAsync().ContinueWith((reply) => {
                 if(reply.Exception == null) Console.WriteLine("Reply: {0}", reply.Result);
                 else Console.WriteLine("ERROR: {0}", reply.Exception.Message);
             });
+
+            await Task.Delay(int.MaxValue);
+
+            // Console.WriteLine("Running on client mode:");
+            // Console.Write("  Setting up connection...     ");
+            // using (var connection = new Connection(Address.System)){   
+            //     var info = await connection.ConnectAsync();                
+            //     Console.WriteLine("OK");
+
+            //     Console.Write("  Setting up dbus service...   ");
+            //     await connection.ActivateServiceAsync(_service);
+            //     Console.WriteLine("OK");    
+
+            //     Console.Write("  Setting up dbus interface... ");
+            //     await connection.RegisterObjectAsync(new UST1.DBus.Worker());
+            //     Console.WriteLine("OK");
+
+            //     Console.WriteLine();
+            //     Console.WriteLine("Client ready and listening!");
+
+            //     //dbus-send --system --print-reply --type=method_call --dest=net.xeill.elpuig.UST1 /net/xeill/elpuig/UST1 net.xeill.elpuig.UST1.Ping
+            //     var dbusManager = connection.CreateProxy<IUST1>(_service, string.Format("/{0}", _service.Replace(".", "/")));
+            //     await dbusManager.PingAsync().ContinueWith((reply) => {
+            //     if(reply.Exception == null) Console.WriteLine("Reply: {0}", reply.Result);
+            //         else Console.WriteLine("ERROR: {0}", reply.Exception.Message);
+            //     });
+                
+            //     while (true) { 
+            //         await Task.Delay(int.MaxValue);
+            //     }
+            // }
         }
         private static async Task Config(){
             Console.WriteLine("Configuration requested: ", DateTime.Now.Year);
-
-            var filename = "net.xeill.elpuig.UST1.service";
+            var filename = "system-local.conf";
             var source = Path.Combine("files", filename);
-            var dest = Path.Combine("/usr/share/dbus-1/services", filename);
+            var dest = Path.Combine("/etc/dbus-1", filename);
 
-            Console.Write("     Removing the current service... ");                
+            Console.Write("  Removing the current config file... ");                
             File.Delete(dest);
             Console.WriteLine("OK");
             
-            Console.Write("     Creating a new service... ");
+            Console.Write("  Creating a new config file...       ");
             File.Copy(source, dest);
             Console.WriteLine("OK");
 
-            filename = "net.xeill.elpuig.UST1.xml";
-            source = Path.Combine("files", filename);
-            dest = Path.Combine("/usr/share/dbus-1/interfaces", filename);
-
-            Console.Write("     Removing the current interface... ");                
-            File.Delete(dest);
-            Console.WriteLine("OK");
-            
-            Console.Write("     Creating a new interface... ");
-            File.Copy(source, dest);
-            Console.WriteLine("OK");
-
-            Console.Write("     Reloading DBus configuration... ");
+            Console.Write("  Reloading dbus configuration...     ");
             var systemConnection = Connection.System;
             var dbusManager = systemConnection.CreateProxy<IDBus>("org.freedesktop.DBus", "/org/freedesktop/DBus");
             await dbusManager.ReloadConfigAsync();
