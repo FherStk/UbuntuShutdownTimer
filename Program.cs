@@ -29,6 +29,9 @@ using System.Threading.Tasks;
 
 namespace UST
 {   
+    //Tested multi-server and multi-client; only the last registered server is processing the requests
+    //All the registered clients are working ok, only 1 server can work ok.
+
     class Program
     {
         private static string _service = "net.xeill.elpuig.UST1";
