@@ -34,7 +34,6 @@ namespace UST
 
     class Program
     {
-        private static string _service = "net.xeill.elpuig.UST1";
         static async Task Main(string[] args)
         {
             Console.WriteLine();
@@ -61,6 +60,7 @@ namespace UST
         }
 
         private static async Task Server(){  
+            var t = new UST1.DBus.Worker();
             Console.WriteLine("Running on server mode:");
             Console.Write("  Setting up connection...     ");
             using (var connection = new Connection(Address.System)){   
@@ -68,7 +68,7 @@ namespace UST
                 Console.WriteLine("OK");
 
                 Console.Write("  Setting up dbus service...   ");
-                await connection.RegisterServiceAsync(_service);
+                await connection.RegisterServiceAsync(UST1.DBus.Worker.Path.ToString());
                 Console.WriteLine("OK");    
 
                 Console.Write("  Setting up dbus interface... ");
@@ -91,7 +91,7 @@ namespace UST
             Console.WriteLine("OK");
             
             Console.Write("  Conneting to dbus interface... ");
-            var ust = connection.CreateProxy<IUST1>(_service, string.Format("/{0}", _service.Replace(".", "/")));
+            var ust = connection.CreateProxy<IUST1>(UST1.DBus.Worker.Path.ToString(), UST1.DBus.Worker.Service);
             Console.WriteLine("OK");
             Console.WriteLine();
 
@@ -130,7 +130,7 @@ namespace UST
             Console.WriteLine("Usage: dotnet run [options]");
             Console.WriteLine();
             Console.WriteLine("Options:");
-            Console.WriteLine("  --config        Configures the DBus interface (needs root permissions).");
+            Console.WriteLine("  --config        Configures the DBus interface (needs root permissions)."); //TODO: --install (creates the service, edit the files (do not ovewrite)) and also --uninstall
             Console.WriteLine("  --client        Runs the application as a client (needs GUI user account).");
             Console.WriteLine("  --server        Runs the application as a server (needs a system account).");
         }

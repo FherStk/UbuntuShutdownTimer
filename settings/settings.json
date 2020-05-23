@@ -1,0 +1,16 @@
+{    
+    "Schedule": [
+        {
+            "Shutdown": "1900-01-01T12:00:00.000Z",
+            "Mode": "SILENT"
+        },
+        {
+            "Shutdown": "1900-01-01T14:55:00.000Z",
+            "Mode": "CANCELLABLE"
+        },
+        {
+            "Shutdown": "1900-01-01T21:05:00.000Z",
+            "Mode": "INFORMATIVE"
+        }
+    ]
+}
