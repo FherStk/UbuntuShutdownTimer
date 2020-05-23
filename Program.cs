@@ -47,8 +47,8 @@ namespace UST
 
             try{
                 if(args.Where(x => x.Equals("--config")).Count() == 1) await Config();                          
-                else if(args.Where(x => x.Equals("--server")).Count() == 1) await Server();        
-                else if(args.Where(x => x.Equals("--client")).Count() == 1) await Client();        
+                else if(args.Where(x => x.Equals("--server")).Count() == 1) await new Server().Run();
+                else if(args.Where(x => x.Equals("--client")).Count() == 1) await new Client().Run();
                 else Help();
             }
             catch(Exception ex){
@@ -58,81 +58,7 @@ namespace UST
 
             Console.WriteLine();
         }
-
-        private static async Task Server(){  
-            Console.WriteLine("Running on server mode:");
-            Console.Write("  Setting up connection...     ");
-            using (var connection = new Connection(Address.System)){   
-                var info = await connection.ConnectAsync();                
-                Console.WriteLine("OK");
-
-                Console.Write("  Setting up dbus service...   ");
-                await connection.RegisterServiceAsync(UST1.DBus.Worker.Path);
-                Console.WriteLine("OK");    
-
-                Console.Write("  Setting up dbus interface... ");
-                await connection.RegisterObjectAsync(new UST1.DBus.Worker());
-                Console.WriteLine("OK");
-
-                Console.WriteLine();
-                Console.WriteLine("Server ready and listening!");             
-                
-                while (true) { 
-                    await Task.Delay(int.MaxValue);
-                }
-            }           
-        }
-        private static async Task Client(){
-            Console.WriteLine("Running on client mode:");
-
-            Console.Write("  Setting up connection...       ");
-            var connection = Connection.System;
-            Console.WriteLine("OK");
-            
-            Console.Write("  Conneting to dbus interface... ");
-            var ust = connection.CreateProxy<IUST1>(UST1.DBus.Worker.Path, UST1.DBus.Worker.Service);
-            Console.WriteLine("OK");
-            Console.WriteLine();
-
-            await ust.RequestScheduleAsync().ContinueWith((reply) => {
-                if(reply.Exception == null) Console.WriteLine("Reply: {0}", reply.Result.GUID);
-                else Console.WriteLine("ERROR: {0}", reply.Exception.Message);
-            });
-
-            while (true) { 
-                await Task.Delay(int.MaxValue);
-            }
-        }
-
-        private static void ScheduleMessage(Schedule s){
-            Console.WriteLine("   Scheduled shutdown server data:");
-            Console.WriteLine("   - GUID: {0}", s.GUID.ToString());
-            Console.WriteLine("   - Mode: {0}", s.Mode.ToString());
-            Console.WriteLine("   - Shutdown on: {0}", s.Shutdown.ToString());
-
-            var now = DateTime.Now;
-            //###### INIT DEVEL (REMOVE ON PRODUCTION) ######                          
-            s.Shutdown = now.AddSeconds(5);
-            //###### END  DEVEL (REMOVE ON PRODUCTION) ######      
-            Console.Write("Schedulling the message box to rise on {0} with GUID {1}... ", s.Shutdown, s.GUID);
-            var t = Task.Delay((int)(s.Shutdown - now).TotalMilliseconds);
-            Console.WriteLine("OK");            
-
-            t.Wait();
-            //Cancel(s);
-        }
-
-        private static void Cancel(Schedule s){
-            Console.WriteLine("The user requests for cancellation over the scheduled shutdown on {0} with GUID {1}", s.Shutdown.ToString(), s.GUID); 
-            Console.Write("Requesting for the current shutdown event cancellation... ");
-            //s = client.CancelCurrent(new CancelCurrentRequest(){ Guid = s.GUID});
-            Console.WriteLine("OK");
-            ScheduleMessage(s);
-        }
-
-        private static void Continue(Schedule s){
-            Console.WriteLine("The user accepts the scheduled shutdown on {0} with GUID {1}", s.Shutdown.ToString(), s.GUID);  
-        }
+       
         
         private static async Task Config(){
             Console.WriteLine("Configuration requested: ", DateTime.Now.Year);

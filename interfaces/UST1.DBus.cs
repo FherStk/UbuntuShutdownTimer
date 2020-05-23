@@ -24,6 +24,13 @@ namespace UST1.DBus
 
         [JsonConverter(typeof(ScheduleModeConverter))]
         public ScheduleMode Mode {get; set;}
+
+        public override string ToString(){           
+            return $@"   Scheduled shutdown data:\n
+                           - GUID: {GUID.ToString()}\n
+                           - Mode: {Mode.ToString()}\n
+                           - Shutdown on: {Shutdown.ToString()}\n";
+        }
     }
 
     public class ScheduleModeConverter : JsonConverter<ScheduleMode>
@@ -108,7 +115,8 @@ namespace UST1.DBus
                 }
             });
             
-            Console.WriteLine($"A new shutdown event has been successfully scheduled on {_current.Shutdown} for GUID {_current.GUID}");    
+            //Console.WriteLine($"A new shutdown event has been successfully scheduled on {_current.Shutdown} for GUID {_current.GUID}");    
+            Console.WriteLine(_current.ToString());
             return _current;
         }
     
