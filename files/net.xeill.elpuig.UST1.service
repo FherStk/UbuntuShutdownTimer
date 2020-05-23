@@ -1,4 +1,0 @@
-[D-BUS Service]
-Name=net.xeill.elpuig.UST1
-Exec=/home/usuario/repo/ust/dotnet run --server
-User=usuario
