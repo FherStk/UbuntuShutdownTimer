@@ -36,7 +36,7 @@ namespace UST1.DBus
     interface IUST1 : IDBusObject
     {
         Task<Schedule> RequestScheduleAsync();
-        Task<string> PingAsync();
+        Task<Schedule> CancelScheduleAsync(Guid guid);
     }
 
     class Worker : IUST1
@@ -45,13 +45,13 @@ namespace UST1.DBus
             public Schedule[] Schedule {get; set;}
         }
 
-        public static readonly ObjectPath Path = new ObjectPath("/net/xeill/elpuig/UST1");
-        
-        public static string Service {
-            get{
-                return Path.ToString().Replace("/", ".").TrimStart('.');
-            }
-        } 
+        public static string Path { get { return _path.ToString(); } }        
+
+        public static string Service { get{ return _path.ToString().Replace("/", ".").TrimStart('.'); } } 
+
+        public ObjectPath ObjectPath { get { return _path; } }
+
+        private static readonly ObjectPath _path = new ObjectPath("/net/xeill/elpuig/UST1");
 
         private List<Schedule> _data;        
         
@@ -72,15 +72,17 @@ namespace UST1.DBus
 
             if(json.Schedule.Length == 0) throw new Exception("No data has been provided, please fill the setting.json file.");  
             _data = json.Schedule.OrderBy(x => x.Shutdown).ToList();  
-            _data.ForEach(x => x.GUID = Guid.NewGuid());       
+            _data.ForEach(x => x.GUID = Guid.NewGuid());    
+
+            Next();   
         }
 
         private Schedule Next(){
-            //Cancelling the current one
-            // if(CancelTask != null){
-            //     CancelTask.Cancel();
-            //     Logger.LogInformation($"Cancelling the scheduled shutdown event with GUID {Current.Guid}");  
-            // }  
+            //Cancel the current scheduled shutdown
+            if(_cancel != null){
+                _cancel.Cancel();
+                Console.WriteLine($"Cancelling the scheduled shutdown event with GUID {_current.GUID}");  
+            }
 
             //Get the next schedule
             var now = DateTime.Now;
@@ -88,7 +90,7 @@ namespace UST1.DBus
                 if((_current.Shutdown - now).TotalMilliseconds > 0) break;
             }
 
-            //If null, schedule for tomorrow
+            //If all the schedules has been used, start again for tomorrow
             if(_current == null){
                 _index = 0;
                 _data.ForEach(x => x.Shutdown = x.Shutdown.AddDays(1));                                
@@ -98,33 +100,29 @@ namespace UST1.DBus
             //Current.Shutdown = DateTime.SpecifyKind(DateTime.Now.AddSeconds(30), DateTimeKind.Utc).ToTimestamp();    
             //###### END  DEVEL (REMOVE ON PRODUCTION) ######
             _cancel = new CancellationTokenSource();
-            Task.Delay((int)(_current.Shutdown - now.ToTimestamp()).Seconds*1000, _cancel.Token).ContinueWith(t =>
+            Task.Delay((int)(_current.Shutdown - now).TotalMilliseconds, _cancel.Token).ContinueWith(t =>
             {
                 if(!t.IsCanceled){
-                    Logger.LogInformation($"Shutting down for scheduled event with GUID {_current.Guid}");  
-                    Logger.LogInformation("SHUTDOWN!");  
+                    Console.WriteLine("Shutting down for scheduled event with GUID {0}", _current.GUID);  
+                    Console.WriteLine("SHUTDOWN!");  
                 }
             });
             
-            Logger.LogInformation($"A new shutdown event has been successfully scheduled on {_current.Shutdown} for GUID {_current.Guid}");    
-            return Current;
+            Console.WriteLine($"A new shutdown event has been successfully scheduled on {_current.Shutdown} for GUID {_current.GUID}");    
+            return _current;
         }
-     
     
-
         public Task<Schedule> RequestScheduleAsync()
-        {
-            //Console.WriteLine("REQUEST!");
-
-            return Task.FromResult(new Schedule());
+        {            
+            return Task.FromResult(_current);
         }
 
-        public Task<string> PingAsync()
+        public Task<Schedule> CancelScheduleAsync(Guid guid)
         {
-            Console.WriteLine("REQUEST!");
-            return Task.FromResult("pong");
+            if(_current.GUID.Equals(guid)) return Task.FromResult(Next());
+            else return Task.FromResult(_current);
         }
 
-        public ObjectPath ObjectPath { get { return Path; } }
+        
     }
 }
