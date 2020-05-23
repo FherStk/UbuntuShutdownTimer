@@ -97,7 +97,9 @@ namespace UST
                 else Console.WriteLine("ERROR: {0}", reply.Exception.Message);
             });
 
-            await Task.Delay(int.MaxValue);
+            while (true) { 
+                await Task.Delay(int.MaxValue);
+            }
         }
         
         private static async Task Config(){
@@ -120,6 +122,7 @@ namespace UST
             await dbusManager.ReloadConfigAsync();
             Console.WriteLine("OK"); 
         }
+
         private static void Help(){
             Console.WriteLine("Usage: dotnet run [options]");
             Console.WriteLine();
