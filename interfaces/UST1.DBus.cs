@@ -1,13 +1,8 @@
 using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Runtime.CompilerServices;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.IO;
-using System.Linq;
+using System.Threading.Tasks;
+using System.Runtime.CompilerServices;
 using Tmds.DBus;
 
 [assembly: InternalsVisibleTo(Tmds.DBus.Connection.DynamicAssemblyName)]
@@ -44,7 +39,7 @@ namespace UST1.DBus
     interface IUST1 : IDBusObject
     {
         Task<Schedule> RequestScheduleAsync();
-        Task<Schedule> WatchChangesAsync(Action<ObjectPath> handler, Action<Exception> onError = null);
+        Task<Schedule> WatchChangesAsync(Action<Schedule> handler);
         Task<Schedule> CancelScheduleAsync(Guid guid);
     }
 
@@ -70,10 +65,9 @@ namespace UST1.DBus
             return Task.FromResult(Server.Current);
         }
 
-        public Task<Schedule> WatchChangesAsync(Action<ObjectPath> handler, Action<Exception> onError = null)
+        public Task<Schedule> WatchChangesAsync(Action<Schedule> handler)
         {
-            //TODO: do not ignore onError :p
-            Server.Watchers.Add(handler);
+            Server.AddWatcher(handler);
             return Task.FromResult(Server.Current);
         }
 

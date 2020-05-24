@@ -20,18 +20,15 @@
 */
 
 using System;
-using Tmds.DBus;
-using UST1.DBus;
-using DBus.DBus;
-using System.Linq;
 using System.IO;
+using System.Linq;
+using System.Threading;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
-using System.Runtime.CompilerServices;
-using System.Threading;
-using System.Text.Json;
-using System.Text.Json.Serialization;
+using Tmds.DBus;
+using UST1.DBus;
 
 namespace UST
 {   
@@ -44,11 +41,11 @@ namespace UST
             public Schedule[] Schedule {get; set;}
         }
 
-        private Worker _worker;
+        private Worker _dbus;
         private List<Schedule> _data;          
         private CancellationTokenSource _cancel;
         private int _index;        
-        public ConcurrentBag<Action<ObjectPath>> Watchers {get; set;}
+        private ConcurrentBag<Action<Schedule>> _watchers;
         public Schedule Current{
             get{
                 if(_data == null || _data.Count == 0 || _index < 0 || _index >= _data.Count) return null;
@@ -62,9 +59,9 @@ namespace UST
 
             if(json.Schedule.Length == 0) throw new Exception("No data has been provided, please fill the setting.json file.");  
             _data = json.Schedule.OrderBy(x => x.Shutdown).ToList();  
-            _data.ForEach(x => x.GUID = Guid.NewGuid());    
-            Watchers = new ConcurrentBag<Action<ObjectPath>>();    
-            _worker = new Worker(this);
+            _data.ForEach(x => x.GUID = Guid.NewGuid());                
+            _dbus = new Worker(this);
+            _watchers = new ConcurrentBag<Action<Schedule>>();    
         }
 
         public async Task Run(){  
@@ -79,7 +76,7 @@ namespace UST
                 Console.WriteLine("OK");    
 
                 Console.Write("  Setting up dbus interface... ");
-                await connection.RegisterObjectAsync(_worker);
+                await connection.RegisterObjectAsync(_dbus);
                 Console.WriteLine("OK");
 
                 Next();
@@ -127,10 +124,14 @@ namespace UST
             Console.WriteLine($"A new shutdown event has been successfully scheduled:");                
             Console.WriteLine(Current.ToString());
 
-            foreach(var w in Watchers)
-                w.Invoke(_worker.ObjectPath);
+            foreach(var w in _watchers)
+                w.Invoke(Current);
 
             return Current;
-        }                       
+        }
+
+        public void AddWatcher(Action<Schedule> a){
+            _watchers.Add(a);
+        }
     }
 }

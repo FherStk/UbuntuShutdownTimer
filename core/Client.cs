@@ -25,6 +25,7 @@ using UST1.DBus;
 using DBus.DBus;
 using System.Linq;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace UST
@@ -34,6 +35,10 @@ namespace UST
 
     class Client
     {
+        private CancellationTokenSource _cancel;
+        
+        private IUST1 _dbus;
+        
         public Client(){            
         }
 
@@ -45,45 +50,61 @@ namespace UST
                 Console.WriteLine("OK");
                 
                 Console.Write("  Conneting to dbus interface... ");
-                var ust = connection.CreateProxy<IUST1>(UST1.DBus.Worker.Path, UST1.DBus.Worker.Service);
+                _dbus = connection.CreateProxy<IUST1>(UST1.DBus.Worker.Path, UST1.DBus.Worker.Service);
                 Console.WriteLine("OK");
                 Console.WriteLine();
+            
+                Console.Write("  Requesting for the current shutdown event data:");
+                var s = await _dbus.RequestScheduleAsync();            
+                Console.WriteLine(s.ToString());
 
-                Console.Write("  Requesting for the current shutdown event data... ");
-                var s = await ust.RequestScheduleAsync();
-                Console.WriteLine("OK");
-
-                await ScheduleMessage(ust, s);                
-                // while (true) { 
-                //     await Task.Delay(int.MaxValue);
-                // }     
+                SchedulePopup(s);
+                while (true) { 
+                    await Task.Delay(int.MaxValue);
+                }     
             }    
-        }        
+        }     
 
-        private async static Task ScheduleMessage(IUST1 ust, Schedule s){
-            Console.WriteLine(s.ToString());
-
+        private void SchedulePopup(Schedule s){
             var now = DateTime.Now;
             //###### INIT DEVEL (REMOVE ON PRODUCTION) ######                          
             s.Shutdown = now.AddSeconds(5);
             //###### END  DEVEL (REMOVE ON PRODUCTION) ######      
             Console.Write("  Schedulling the message box to rise on {0} with GUID {1}... ", s.Shutdown, s.GUID);
-            await Task.Delay((int)(s.Shutdown - now).TotalMilliseconds);
-            Console.WriteLine("OK");            
 
-            //Cancel(s);
+            _cancel = new CancellationTokenSource();
+            Task.Delay((int)(s.Shutdown - now).TotalMilliseconds, _cancel.Token).ContinueWith(t =>
+            {
+                if(!t.IsCanceled){
+                    Console.WriteLine("Rising popup for the scheduled event with GUID {0}", s.GUID);  
+                    Console.WriteLine("POPUP!");  
+                    
+                    //Get user response (cancel or continue)
+                    //Cancel(s);
+                    //Continue(s);
+                }
+            });
+
+            _dbus.WatchChangesAsync((sn) => {
+                Console.Write("Cancelling the current scheduled event with GUID {0}... ", s.GUID); 
+                _cancel.Cancel();     
+                Console.WriteLine("OK");                                                     
+
+                SchedulePopup(sn);
+            });            
+
+            Console.WriteLine("OK");                      
         }
 
-        private async static Task Cancel(IUST1 ust, Schedule s){
+        private void Cancel(Schedule s){
             Console.WriteLine("  The user requests for cancellation over the scheduled shutdown on {0} with GUID {1}", s.Shutdown.ToString(), s.GUID); 
+            
             Console.Write("  Requesting for the current shutdown event cancellation... ");            
-            s = await ust.CancelScheduleAsync(s.GUID);
+            _dbus.CancelScheduleAsync(s.GUID);
             Console.WriteLine("OK");
-
-            await ScheduleMessage(ust, s);
         }
 
-        private static void Continue(Schedule s){
+        private void Continue(Schedule s){
             Console.WriteLine("  The user accepts the scheduled shutdown on {0} with GUID {1}", s.Shutdown.ToString(), s.GUID);  
         }
     }
