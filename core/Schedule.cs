@@ -31,26 +31,52 @@ namespace UST
         INFORMATIVE,
         SILENT
     }
-    
-    public class Schedule : UST1.DBus.ISchedule{    
+
+    [Dictionary]
+    class Schedule: IDisposable
+    {
         public Guid GUID {get; set;}
-        public DateTime Shutdown {get; set;}
+        public string Shutdown {get; set;}  //cannot be a datetime due serialization through d-bus
 
         [JsonConverter(typeof(ScheduleModeConverter))]
-        public ScheduleMode Mode {get; set;}
-
-        public ObjectPath ObjectPath { get { return _path; } }
-
-        private static readonly ObjectPath _path = new ObjectPath("/net/xeill/elpuig/UST1/Schedule"); 
-
-        public void Dispose(){
-
-        }
+        public ScheduleMode Mode {get; set;}       
 
         public override string ToString(){           
             return $"  - GUID: {GUID.ToString()} \n  - Mode: {Mode.ToString()}\n  - Shutdown on: {Shutdown.ToString()}";
         }
+
+        public void SetShutdownDateTime(DateTime dt){
+            Shutdown = dt.ToString();
+        }
+
+        public DateTime GetShutdownDateTime(){
+            return DateTime.Parse(Shutdown);
+        }
+
+        public void Dispose(){
+
+        }
     }
+    
+    // public class Schedule : UST1.DBus.ISchedule{    
+    //     public Guid GUID {get; set;}
+    //     public DateTime Shutdown {get; set;}
+
+    //     [JsonConverter(typeof(ScheduleModeConverter))]
+    //     public ScheduleMode Mode {get; set;}
+
+    //     public ObjectPath ObjectPath { get { return _path; } }
+
+    //     private static readonly ObjectPath _path = new ObjectPath("/net/xeill/elpuig/UST1/Schedule"); 
+
+    //     public void Dispose(){
+
+    //     }
+
+    //     public override string ToString(){           
+    //         return $"  - GUID: {GUID.ToString()} \n  - Mode: {Mode.ToString()}\n  - Shutdown on: {Shutdown.ToString()}";
+    //     }
+    // }
 
     public class ScheduleModeConverter : JsonConverter<ScheduleMode>
     {        

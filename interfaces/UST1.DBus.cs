@@ -12,20 +12,20 @@ namespace UST1.DBus
     [DBusInterface("net.xeill.elpuig.UST1")]
     interface IUST1 : IDBusObject
     {
-        Task<ISchedule> RequestScheduleAsync();        
-        Task<ISchedule> CancelScheduleAsync(Guid guid);
-        Task<IDisposable> WatchChangesAsync(Action<ISchedule> handler);
+        Task<Schedule> RequestScheduleAsync();        
+        Task<Schedule> CancelScheduleAsync(Guid guid);
+        Task<IDisposable> WatchChangesAsync(Action<Schedule> handler);
     }
 
-    [DBusInterface("net.xeill.elpuig.UST1.Schedule")]
-    public interface ISchedule : IDBusObject, IDisposable   //TODO: check how DBus.DBus is doing it...
-    {
-        Guid GUID {get; set;}
+    // [DBusInterface("net.xeill.elpuig.UST1.Schedule")]
+    // public interface ISchedule : IDBusObject, IDisposable   //TODO: check how DBus.DBus is doing it...
+    // {
+    //     Guid GUID {get; set;}
         
-        DateTime Shutdown {get; set;}
+    //     DateTime Shutdown {get; set;}
         
-        ScheduleMode Mode {get; set;}
-    }
+    //     ScheduleMode Mode {get; set;}
+    // }
 
     class Worker : IUST1
     {        
@@ -44,21 +44,20 @@ namespace UST1.DBus
             Server = srv;
         }
             
-        public Task<ISchedule> RequestScheduleAsync()
+        public Task<Schedule> RequestScheduleAsync()
         {            
             return Task.FromResult(Server.Current);
         }
 
-        public Task<IDisposable> WatchChangesAsync(Action<ISchedule> handler)
+        public Task<IDisposable> WatchChangesAsync(Action<Schedule> handler)
         {
-            Server.AddWatcher(handler);
-            //return Task.FromResult(Server.Current);
+            //Server.AddWatcher(handler);
             //return Task.FromResult<IDisposable>(Server.Current);
             return Task.FromResult<IDisposable>(new Connection(""));
         }
 
 
-        public Task<ISchedule> CancelScheduleAsync(Guid guid)
+        public Task<Schedule> CancelScheduleAsync(Guid guid)
         {
             if(Server.Current.GUID.Equals(guid)) return Task.FromResult(Server.Next());
             else return Task.FromResult(Server.Current);

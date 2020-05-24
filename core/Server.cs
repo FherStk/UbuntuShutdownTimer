@@ -42,11 +42,11 @@ namespace UST
         }
 
         private Worker _dbus;
-        private List<ISchedule> _data;          
+        private List<Schedule> _data;          
         private CancellationTokenSource _cancel;
         private int _index;        
-        private ConcurrentBag<Action<ISchedule>> _watchers;
-        public ISchedule Current{
+        private ConcurrentBag<Action<Schedule>> _watchers;
+        public Schedule Current{
             get{
                 if(_data == null || _data.Count == 0 || _index < 0 || _index >= _data.Count) return null;
                 else return _data[_index];
@@ -60,11 +60,12 @@ namespace UST
 
             _index = -1;
             _dbus = new Worker(this);
-            _watchers = new ConcurrentBag<Action<ISchedule>>();  
-            _data = json.Schedule.OrderBy(x => x.Shutdown).ToList<ISchedule>();  
+            _watchers = new ConcurrentBag<Action<Schedule>>();  
+            _data = json.Schedule.OrderBy(x => x.Shutdown).ToList();  
             _data.ForEach((x) => {
-                x.GUID = Guid.NewGuid();
-                x.Shutdown = new DateTime(now.Year, now.Month, now.Day, x.Shutdown.Hour, x.Shutdown.Minute, x.Shutdown.Second);
+                var dt = x.GetShutdownDateTime();
+                x.GUID = Guid.NewGuid();    
+                x.SetShutdownDateTime(new DateTime(now.Year, now.Month, now.Day, dt.Hour, dt.Minute, dt.Second));
             });                  
         }
 
@@ -95,7 +96,7 @@ namespace UST
             }           
         }
 
-        public ISchedule Next(){
+        public Schedule Next(){
             //Cancel the current scheduled shutdown
             if(_cancel != null){
                 _cancel.Cancel();
@@ -105,20 +106,20 @@ namespace UST
             //Get the next schedule
             var now = DateTime.Now;
             for(_index = _index+1; _index < _data.Count(); _index++){                
-                if((Current.Shutdown - now).TotalMilliseconds > 0) break;
+                if((Current.GetShutdownDateTime() - now).TotalMilliseconds > 0) break;
             }
 
             //If all the schedules has been used, start again for tomorrow
             if(Current == null){
                 _index = 0;
-                _data.ForEach(x => x.Shutdown = x.Shutdown.AddDays(1));                                
+                _data.ForEach(x => x.SetShutdownDateTime(x.GetShutdownDateTime().AddDays(1)));                                
             }
             
             //###### INIT DEVEL (REMOVE ON PRODUCTION) ######
-            Current.Shutdown = DateTime.Now.AddSeconds(30);
+            Current.SetShutdownDateTime(DateTime.Now.AddSeconds(30));
             //###### END  DEVEL (REMOVE ON PRODUCTION) ######
             _cancel = new CancellationTokenSource();
-            Task.Delay((int)(Current.Shutdown - now).TotalMilliseconds, _cancel.Token).ContinueWith(t =>
+            Task.Delay((int)(Current.GetShutdownDateTime() - now).TotalMilliseconds, _cancel.Token).ContinueWith(t =>
             {
                 if(!t.IsCanceled){
                     Console.WriteLine("Shutting down for scheduled event with GUID {0}", Current.GUID);  
@@ -135,7 +136,7 @@ namespace UST
             return Current;
         }
 
-        public void AddWatcher(Action<ISchedule> a){
+        public void AddWatcher(Action<Schedule> a){
             _watchers.Add(a);
         }
     }
