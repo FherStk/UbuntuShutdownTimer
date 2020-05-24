@@ -18,7 +18,7 @@ namespace UST1.DBus
     }
 
     [DBusInterface("net.xeill.elpuig.UST1.Schedule")]
-    public interface ISchedule : IDBusObject, IDisposable
+    public interface ISchedule : IDBusObject, IDisposable   //TODO: check how DBus.DBus is doing it...
     {
         Guid GUID {get; set;}
         

@@ -47,7 +47,7 @@ namespace UST
                 Console.WriteLine("OK");
                 
                 Console.Write("  Conneting to dbus interface... ");
-                _dbus = connection.CreateProxy<IUST1>(UST1.DBus.Worker.Path, UST1.DBus.Worker.Service);
+                _dbus = connection.CreateProxy<IUST1>(UST1.DBus.Worker.Service, UST1.DBus.Worker.Path);
                 Console.WriteLine("OK");
                 Console.WriteLine();
             
