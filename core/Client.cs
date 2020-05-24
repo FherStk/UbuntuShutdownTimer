@@ -62,7 +62,7 @@ namespace UST
             }    
         }     
 
-        private void SchedulePopup(Schedule s){
+        private void SchedulePopup(ISchedule s){
             var now = DateTime.Now;
             //###### INIT DEVEL (REMOVE ON PRODUCTION) ######                          
             s.Shutdown = now.AddSeconds(5);
@@ -93,7 +93,7 @@ namespace UST
             Console.WriteLine("OK");                      
         }
 
-        private void Cancel(Schedule s){
+        private void Cancel(ISchedule s){
             Console.WriteLine("  The user requests for cancellation over the scheduled shutdown on {0} with GUID {1}", s.Shutdown.ToString(), s.GUID); 
             
             Console.Write("  Requesting for the current shutdown event cancellation... ");            
@@ -101,7 +101,7 @@ namespace UST
             Console.WriteLine("OK");
         }
 
-        private void Continue(Schedule s){
+        private void Continue(ISchedule s){
             Console.WriteLine("  The user accepts the scheduled shutdown on {0} with GUID {1}", s.Shutdown.ToString(), s.GUID);  
         }
     }

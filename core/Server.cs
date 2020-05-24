@@ -42,11 +42,11 @@ namespace UST
         }
 
         private Worker _dbus;
-        private List<Schedule> _data;          
+        private List<ISchedule> _data;          
         private CancellationTokenSource _cancel;
         private int _index;        
-        private ConcurrentBag<Action<Schedule>> _watchers;
-        public Schedule Current{
+        private ConcurrentBag<Action<ISchedule>> _watchers;
+        public ISchedule Current{
             get{
                 if(_data == null || _data.Count == 0 || _index < 0 || _index >= _data.Count) return null;
                 else return _data[_index];
@@ -60,8 +60,8 @@ namespace UST
 
             _index = -1;
             _dbus = new Worker(this);
-            _watchers = new ConcurrentBag<Action<Schedule>>();  
-            _data = json.Schedule.OrderBy(x => x.Shutdown).ToList();  
+            _watchers = new ConcurrentBag<Action<ISchedule>>();  
+            _data = json.Schedule.OrderBy(x => x.Shutdown).ToList<ISchedule>();  
             _data.ForEach((x) => {
                 x.GUID = Guid.NewGuid();
                 x.Shutdown = new DateTime(now.Year, now.Month, now.Day, x.Shutdown.Hour, x.Shutdown.Minute, x.Shutdown.Second);
@@ -82,7 +82,8 @@ namespace UST
                 Console.Write("  Setting up dbus interface... ");
                 await connection.RegisterObjectAsync(_dbus);
                 Console.WriteLine("OK");
-
+                Console.WriteLine();
+                
                 Next();
 
                 Console.WriteLine();
@@ -94,7 +95,7 @@ namespace UST
             }           
         }
 
-        public Schedule Next(){
+        public ISchedule Next(){
             //Cancel the current scheduled shutdown
             if(_cancel != null){
                 _cancel.Cancel();
@@ -114,7 +115,7 @@ namespace UST
             }
             
             //###### INIT DEVEL (REMOVE ON PRODUCTION) ######
-            //Current.Shutdown = DateTime.SpecifyKind(DateTime.Now.AddSeconds(30), DateTimeKind.Utc).ToTimestamp();    
+            Current.Shutdown = DateTime.Now.AddSeconds(30);
             //###### END  DEVEL (REMOVE ON PRODUCTION) ######
             _cancel = new CancellationTokenSource();
             Task.Delay((int)(Current.Shutdown - now).TotalMilliseconds, _cancel.Token).ContinueWith(t =>
@@ -134,7 +135,7 @@ namespace UST
             return Current;
         }
 
-        public void AddWatcher(Action<Schedule> a){
+        public void AddWatcher(Action<ISchedule> a){
             _watchers.Add(a);
         }
     }

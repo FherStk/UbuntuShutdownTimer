@@ -22,6 +22,7 @@
 using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Tmds.DBus;
 
 namespace UST
 {   
@@ -31,23 +32,28 @@ namespace UST
         SILENT
     }
     
-    public class Schedule{    
+    public class Schedule : UST1.DBus.ISchedule{    
         public Guid GUID {get; set;}
         public DateTime Shutdown {get; set;}
 
         [JsonConverter(typeof(ScheduleModeConverter))]
         public ScheduleMode Mode {get; set;}
 
+        public ObjectPath ObjectPath { get { return _path; } }
+
+        private static readonly ObjectPath _path = new ObjectPath("/net/xeill/elpuig/UST1/Schedule"); 
+
+        public void Dispose(){
+
+        }
+
         public override string ToString(){           
-            return $@"   Scheduled shutdown data:\n
-                           - GUID: {GUID.ToString()}\n
-                           - Mode: {Mode.ToString()}\n
-                           - Shutdown on: {Shutdown.ToString()}\n";
+            return $"  - GUID: {GUID.ToString()} \n  - Mode: {Mode.ToString()}\n  - Shutdown on: {Shutdown.ToString()}";
         }
     }
 
     public class ScheduleModeConverter : JsonConverter<ScheduleMode>
-    {
+    {        
         public override ScheduleMode Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) => Enum.Parse<ScheduleMode>(reader.GetString());
         public override void Write(Utf8JsonWriter writer, ScheduleMode mode, JsonSerializerOptions options) => writer.WriteStringValue(mode.ToString());
     }
