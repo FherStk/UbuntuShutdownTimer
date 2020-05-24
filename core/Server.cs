@@ -26,6 +26,12 @@ using DBus.DBus;
 using System.Linq;
 using System.IO;
 using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Collections.Concurrent;
+using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace UST
 {   
@@ -34,10 +40,31 @@ namespace UST
 
     class Server
     {
+        private class Settings{
+            public Schedule[] Schedule {get; set;}
+        }
+
         private Worker _worker;
+        private List<Schedule> _data;          
+        private CancellationTokenSource _cancel;
+        private int _index;        
+        public ConcurrentBag<Action<ObjectPath>> Watchers {get; set;}
+        public Schedule Current{
+            get{
+                if(_data == null || _data.Count == 0 || _index < 0 || _index >= _data.Count) return null;
+                else return _data[_index];
+            }
+        }          
 
         public Server(){
-            _worker = new Worker();
+            var now = DateTime.Now;       
+            var json = JsonSerializer.Deserialize<Settings>(File.ReadAllText(System.IO.Path.Combine("settings", "settings.json")));
+
+            if(json.Schedule.Length == 0) throw new Exception("No data has been provided, please fill the setting.json file.");  
+            _data = json.Schedule.OrderBy(x => x.Shutdown).ToList();  
+            _data.ForEach(x => x.GUID = Guid.NewGuid());    
+            Watchers = new ConcurrentBag<Action<ObjectPath>>();    
+            _worker = new Worker(this);
         }
 
         public async Task Run(){  
@@ -55,13 +82,55 @@ namespace UST
                 await connection.RegisterObjectAsync(_worker);
                 Console.WriteLine("OK");
 
+                Next();
+
                 Console.WriteLine();
                 Console.WriteLine("Server ready and listening!");             
-                
+                                                
                 while (true) { 
                     await Task.Delay(int.MaxValue);
                 }
             }           
-        }               
+        }
+
+        public Schedule Next(){
+            //Cancel the current scheduled shutdown
+            if(_cancel != null){
+                _cancel.Cancel();
+                Console.WriteLine($"Cancelling the scheduled shutdown event with GUID {Current.GUID}");  
+            }
+
+            //Get the next schedule
+            var now = DateTime.Now;
+            for(_index = _index+1; _index < _data.Count(); _index++){                
+                if((Current.Shutdown - now).TotalMilliseconds > 0) break;
+            }
+
+            //If all the schedules has been used, start again for tomorrow
+            if(Current == null){
+                _index = 0;
+                _data.ForEach(x => x.Shutdown = x.Shutdown.AddDays(1));                                
+            }
+            
+            //###### INIT DEVEL (REMOVE ON PRODUCTION) ######
+            //Current.Shutdown = DateTime.SpecifyKind(DateTime.Now.AddSeconds(30), DateTimeKind.Utc).ToTimestamp();    
+            //###### END  DEVEL (REMOVE ON PRODUCTION) ######
+            _cancel = new CancellationTokenSource();
+            Task.Delay((int)(Current.Shutdown - now).TotalMilliseconds, _cancel.Token).ContinueWith(t =>
+            {
+                if(!t.IsCanceled){
+                    Console.WriteLine("Shutting down for scheduled event with GUID {0}", Current.GUID);  
+                    Console.WriteLine("SHUTDOWN!");  
+                }
+            });
+            
+            Console.WriteLine($"A new shutdown event has been successfully scheduled:");                
+            Console.WriteLine(Current.ToString());
+
+            foreach(var w in Watchers)
+                w.Invoke(_worker.ObjectPath);
+
+            return Current;
+        }                       
     }
 }
