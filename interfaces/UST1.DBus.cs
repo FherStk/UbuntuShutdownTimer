@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -43,6 +44,7 @@ namespace UST1.DBus
     interface IUST1 : IDBusObject
     {
         Task<Schedule> RequestScheduleAsync();
+        Task<Schedule> WatchChangesAsync(Action<ObjectPath> handler, Action<Exception> onError = null);
         Task<Schedule> CancelScheduleAsync(Guid guid);
     }
 
@@ -63,6 +65,8 @@ namespace UST1.DBus
         private List<Schedule> _data;        
         
         private int _index;
+        
+        private ConcurrentBag<Action<ObjectPath>> _watchers;
 
         private CancellationTokenSource _cancel;
         
@@ -80,8 +84,9 @@ namespace UST1.DBus
             if(json.Schedule.Length == 0) throw new Exception("No data has been provided, please fill the setting.json file.");  
             _data = json.Schedule.OrderBy(x => x.Shutdown).ToList();  
             _data.ForEach(x => x.GUID = Guid.NewGuid());    
+            _watchers = new ConcurrentBag<Action<ObjectPath>>();
 
-            Next();   
+            Next();
         }
 
         private Schedule Next(){
@@ -115,8 +120,12 @@ namespace UST1.DBus
                 }
             });
             
-            //Console.WriteLine($"A new shutdown event has been successfully scheduled on {_current.Shutdown} for GUID {_current.GUID}");    
+            //Console.WriteLine($"A new shutdown event has been successfully scheduled on {_current.Shutdown} for GUID {_current.GUID}");                
             Console.WriteLine(_current.ToString());
+
+            foreach(var w in _watchers)
+                w.Invoke(ObjectPath);
+
             return _current;
         }
     
@@ -124,6 +133,14 @@ namespace UST1.DBus
         {            
             return Task.FromResult(_current);
         }
+
+        public Task<Schedule> WatchChangesAsync(Action<ObjectPath> handler, Action<Exception> onError = null)
+        {
+            //TODO: do not ignore onError :p
+            _watchers.Add(handler);
+            return Task.FromResult(_current);
+        }
+
 
         public Task<Schedule> CancelScheduleAsync(Guid guid)
         {

@@ -54,9 +54,9 @@ namespace UST
                 Console.WriteLine("OK");
 
                 await ScheduleMessage(ust, s);                
-                while (true) { 
-                    await Task.Delay(int.MaxValue);
-                }     
+                // while (true) { 
+                //     await Task.Delay(int.MaxValue);
+                // }     
             }    
         }        
 
