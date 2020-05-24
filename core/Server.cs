@@ -76,7 +76,7 @@ namespace UST
                 Console.WriteLine("OK");
 
                 Console.Write("  Setting up dbus service...   ");
-                await connection.RegisterServiceAsync(UST1.DBus.Worker.Path);
+                await connection.RegisterServiceAsync(UST1.DBus.Worker.Service);
                 Console.WriteLine("OK");    
 
                 Console.Write("  Setting up dbus interface... ");

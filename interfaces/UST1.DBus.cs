@@ -1,40 +1,12 @@
 using System;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Runtime.CompilerServices;
 using Tmds.DBus;
+using UST;
 
 [assembly: InternalsVisibleTo(Tmds.DBus.Connection.DynamicAssemblyName)]
 namespace UST1.DBus
-{    
-    public enum ScheduleMode{
-        CANCELLABLE,
-        INFORMATIVE,
-        SILENT
-    }
-    
-    class Schedule{    
-        public Guid GUID {get; set;}
-        public DateTime Shutdown {get; set;}
-
-        [JsonConverter(typeof(ScheduleModeConverter))]
-        public ScheduleMode Mode {get; set;}
-
-        public override string ToString(){           
-            return $@"   Scheduled shutdown data:\n
-                           - GUID: {GUID.ToString()}\n
-                           - Mode: {Mode.ToString()}\n
-                           - Shutdown on: {Shutdown.ToString()}\n";
-        }
-    }
-
-    public class ScheduleModeConverter : JsonConverter<ScheduleMode>
-    {
-        public override ScheduleMode Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) => Enum.Parse<ScheduleMode>(reader.GetString());
-        public override void Write(Utf8JsonWriter writer, ScheduleMode mode, JsonSerializerOptions options) => writer.WriteStringValue(mode.ToString());
-    }
-
+{       
     [DBusInterface("net.xeill.elpuig.UST1")]
     interface IUST1 : IDBusObject
     {

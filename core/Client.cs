@@ -20,13 +20,10 @@
 */
 
 using System;
-using Tmds.DBus;
-using UST1.DBus;
-using DBus.DBus;
-using System.Linq;
-using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using Tmds.DBus;
+using UST1.DBus;
 
 namespace UST
 {   
