@@ -56,12 +56,16 @@ namespace UST
         public Server(){
             var now = DateTime.Now;       
             var json = JsonSerializer.Deserialize<Settings>(File.ReadAllText(System.IO.Path.Combine("settings", "settings.json")));
-
             if(json.Schedule.Length == 0) throw new Exception("No data has been provided, please fill the setting.json file.");  
-            _data = json.Schedule.OrderBy(x => x.Shutdown).ToList();  
-            _data.ForEach(x => x.GUID = Guid.NewGuid());                
+
+            _index = -1;
             _dbus = new Worker(this);
-            _watchers = new ConcurrentBag<Action<Schedule>>();    
+            _watchers = new ConcurrentBag<Action<Schedule>>();  
+            _data = json.Schedule.OrderBy(x => x.Shutdown).ToList();  
+            _data.ForEach((x) => {
+                x.GUID = Guid.NewGuid();
+                x.Shutdown = new DateTime(now.Year, now.Month, now.Day, x.Shutdown.Hour, x.Shutdown.Minute, x.Shutdown.Second);
+            });                  
         }
 
         public async Task Run(){  
