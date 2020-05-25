@@ -116,7 +116,7 @@ namespace UST
                 var attrValue = "default";
                 
                 var def = doc.DocumentElement.SelectSingleNode($"/{root}/{nodeName}[@{attrName}='{attrValue}']");
-                if(def == null) CreateXmlNode(doc, doc.DocumentElement.SelectSingleNode($"/{root}"), nodeName, attrName, attrValue);
+                if(def == null) def = CreateXmlNode(doc, doc.DocumentElement.SelectSingleNode($"/{root}"), nodeName, attrName, attrValue);
                 
                 nodeName = "allow";
                 attrName = "own";
@@ -137,12 +137,14 @@ namespace UST
             } 
         }
 
-        private static void CreateXmlNode(XmlDocument doc, XmlNode parent, string nodeName, string attrName, string attrValue){
+        private static XmlNode CreateXmlNode(XmlDocument doc, XmlNode parent, string nodeName, string attrName, string attrValue){
             var node = doc.CreateElement(nodeName);                    
             var attr = doc.CreateAttribute(attrName);
             attr.Value = attrValue;
             node.Attributes.Append(attr);
             parent.AppendChild(node);
+
+            return node;
         }
     }
 }
