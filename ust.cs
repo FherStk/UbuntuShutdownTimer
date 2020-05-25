@@ -23,6 +23,7 @@ using System;
 using System.IO;
 using System.Xml;
 using System.Linq;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using Tmds.DBus;
 using DBus.DBus;
@@ -73,15 +74,10 @@ namespace UST
         private static async Task Install(){
             Console.WriteLine("Installation requested: ", DateTime.Now.Year);
             InstallDbusPolicies();
+            InstallingServerService();
+            InstallingClientApp();
 
-
-            // Console.Write("  Removing the current config file... ");
-            // File.Delete(dest);
-            // Console.WriteLine("OK");
-            
-            // Console.Write("  Creating a new config file...       ");
-            // File.Copy(source, dest);
-            // Console.WriteLine("OK");
+           
 
             Console.WriteLine();
             Console.Write("  Reloading dbus configuration...     ");
@@ -91,11 +87,75 @@ namespace UST
             Console.WriteLine("OK"); 
         }
 
-        
+        private static void InstallingClientApp(){
+            var filename = "ust.service";
+            var source = Path.Combine(Server.AppFolder, "files", filename);
+            var dest = Path.Combine("/lib/systemd/system/", filename);
+                
+            if(File.Exists(dest)){
+                Console.WriteLine("  Setting up the server service:");      
+                Console.WriteLine("    Stopping the service... ");
+                RunShellCommand("sudo systemctl stop ust.service");
+                Console.WriteLine("OK");
+
+                Console.Write("    Removing the old service {0}... ", dest);
+                File.Delete(dest);
+                Console.WriteLine("OK");
+            }
+            
+            Console.Write("    Creating the new service {0}... ", dest);
+            File.WriteAllText(dest, String.Format(File.ReadAllText(source), Server.AppFolder));               
+            Console.WriteLine("OK");
+
+            Console.WriteLine("    Reloading the services daemon... ");
+            RunShellCommand("sudo systemctl daemon-reload");
+            Console.WriteLine("OK");
+
+            Console.WriteLine("    Enabling the service... ");
+            RunShellCommand("sudo systemctl enable ust.service");
+            Console.WriteLine("OK");
+
+            Console.WriteLine("    Starting the service... ");
+            RunShellCommand("sudo systemctl start ust.service");
+            Console.WriteLine("OK");            
+        }
+
+        private static void InstallingServerService(){
+            var filename = "ust.service";
+            var source = Path.Combine(Server.AppFolder, "files", filename);
+            var dest = Path.Combine("/lib/systemd/system/", filename);
+                
+            if(File.Exists(dest)){
+                Console.WriteLine("  Setting up the server service:");      
+                Console.WriteLine("    Stopping the service... ");
+                RunShellCommand("sudo systemctl stop ust.service");
+                Console.WriteLine("OK");
+
+                Console.Write("    Removing the old service {0}... ", dest);
+                File.Delete(dest);
+                Console.WriteLine("OK");
+            }
+            
+            Console.Write("    Creating the new service {0}... ", dest);
+            File.WriteAllText(dest, String.Format(File.ReadAllText(source), Server.AppFolder));               
+            Console.WriteLine("OK");
+
+            Console.WriteLine("    Reloading the services daemon... ");
+            RunShellCommand("sudo systemctl daemon-reload");
+            Console.WriteLine("OK");
+
+            Console.WriteLine("    Enabling the service... ");
+            RunShellCommand("sudo systemctl enable ust.service");
+            Console.WriteLine("OK");
+
+            Console.WriteLine("    Starting the service... ");
+            RunShellCommand("sudo systemctl start ust.service");
+            Console.WriteLine("OK");            
+        }
 
         private static void InstallDbusPolicies(){
             var filename = "system-local.conf";
-            var source = Path.Combine("files", filename);
+            var source = Path.Combine(Server.AppFolder, "files", filename);
             var dest = Path.Combine("/etc/dbus-1", filename);
 
             Console.WriteLine("  Setting up the dbus policies:");            
@@ -136,7 +196,7 @@ namespace UST
                 Console.WriteLine("OK");
             } 
         }
-
+        
         private static XmlNode CreateXmlNode(XmlDocument doc, XmlNode parent, string nodeName, string attrName, string attrValue){
             var node = doc.CreateElement(nodeName);                    
             var attr = doc.CreateAttribute(attrName);
@@ -145,6 +205,27 @@ namespace UST
             parent.AppendChild(node);
 
             return node;
+        }
+
+        private static string RunShellCommand(string cmd){
+            var escapedArgs = cmd.Replace("\"", "\\\"");
+            var process = new Process()
+            {                
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "/bin/bash",
+                    Arguments = $"-c \"{escapedArgs}\"",
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                }
+            };
+            
+            process.Start();
+            string result = process.StandardOutput.ReadToEnd();
+            process.WaitForExit();
+
+            return result;
         }
     }
 }

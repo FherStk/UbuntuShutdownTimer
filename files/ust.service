@@ -1,0 +1,10 @@
+[Unit]
+Description=Ubuntu Shutdown Timer (Server)
+After=multi-user.target
+
+[Service]
+ExecStart=/snap/bin/dotnet-sdk.dotnet run -c Release -p {0} --server
+Type=simple
+
+[Install]
+WantedBy=multi-user.target
