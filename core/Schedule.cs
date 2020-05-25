@@ -36,13 +36,14 @@ namespace UST
     class Schedule: IDisposable
     {
         public Guid GUID {get; set;}
-        public string Shutdown {get; set;}  //cannot be a datetime due serialization through d-bus
+        public string Shutdown {get; set;}  //cannot be a datetime due serialization through d-bus      
+        public int PopupTimeframe {get; set;}  //in minutes
 
         [JsonConverter(typeof(ScheduleModeConverter))]
         public ScheduleMode Mode {get; set;}       
 
         public override string ToString(){           
-            return $"  - GUID: {GUID.ToString()} \n  - Mode: {Mode.ToString()}\n  - Shutdown on: {Shutdown.ToString()}";
+            return $"  - GUID: {GUID.ToString()} \n  - Mode: {Mode.ToString()}\n  - Shutdown on: {GetShutdownDateTime().ToString()}\n  - Popup on: {GetPopupDateTime().ToString()}";
         }
 
         public void SetShutdownDateTime(DateTime dt){
@@ -51,6 +52,10 @@ namespace UST
 
         public DateTime GetShutdownDateTime(){
             return DateTime.Parse(Shutdown);
+        }
+
+        public DateTime GetPopupDateTime(){
+            return DateTime.Parse(Shutdown).AddMinutes(-this.PopupTimeframe);
         }
 
         public void Dispose(){

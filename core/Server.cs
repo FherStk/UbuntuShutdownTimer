@@ -39,6 +39,7 @@ namespace UST
     {
         private class Settings{
             public Schedule[] Schedule {get; set;}
+            public int PopupTimeframe {get; set;}
         }
 
         private Worker _dbus;
@@ -62,7 +63,8 @@ namespace UST
             _data = json.Schedule.OrderBy(x => x.Shutdown).ToList();  
             _data.ForEach((x) => {
                 var dt = x.GetShutdownDateTime();
-                x.GUID = Guid.NewGuid();    
+                x.GUID = Guid.NewGuid();
+                x.PopupTimeframe = json.PopupTimeframe;    
                 x.SetShutdownDateTime(new DateTime(now.Year, now.Month, now.Day, dt.Hour, dt.Minute, dt.Second));
             });                  
         }
@@ -86,7 +88,8 @@ namespace UST
                 Next();
 
                 Console.WriteLine();
-                Console.WriteLine("Server ready and listening!");             
+                Console.WriteLine("Server ready and listening!"); 
+                Console.WriteLine();            
                                                 
                 while (true) { 
                     await Task.Delay(int.MaxValue);
@@ -96,9 +99,12 @@ namespace UST
 
         public Schedule Next(){
             //Cancel the current scheduled shutdown
-            if(_cancel != null){
+            if(_cancel != null){                
+                Console.WriteLine($"A client requests for cancellation over the current scheduled shutdown:");  
+                Console.WriteLine(Current.ToString());
+                Console.WriteLine();
+                
                 _cancel.Cancel();
-                Console.WriteLine($"Cancelling the scheduled shutdown event with GUID {Current.GUID}");  
             }
 
             //Get the next schedule
@@ -114,13 +120,16 @@ namespace UST
             }
             
             //###### INIT DEVEL (REMOVE ON PRODUCTION) ######
-            Current.SetShutdownDateTime(DateTime.Now.AddSeconds(30));
+            Current.SetShutdownDateTime(DateTime.Now.AddMinutes(2));
+            Current.PopupTimeframe = 1;
             //###### END  DEVEL (REMOVE ON PRODUCTION) ######
             _cancel = new CancellationTokenSource();
             Task.Delay((int)(Current.GetShutdownDateTime() - now).TotalMilliseconds, _cancel.Token).ContinueWith(t =>
             {
                 if(!t.IsCanceled){
-                    Console.WriteLine("Shutting down for scheduled event with GUID {0}", Current.GUID);  
+                    Console.WriteLine("Shutting down the computer for the current scheduled event:");
+                    Console.WriteLine(Current.ToString());
+                    Console.WriteLine();
                     Console.WriteLine("SHUTDOWN!");  
                 }
             });

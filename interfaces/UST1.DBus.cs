@@ -43,7 +43,7 @@ namespace UST1.DBus
 
         public Task<IDisposable> WatchChangesAsync(Action<Schedule> reply)
         {            
-            return SignalWatcher.AddAsync(Server.Current, nameof(OnCancel), reply);            
+            return SignalWatcher.AddAsync(this, nameof(OnCancel), reply);            
         }
 
         public Task CancelScheduleAsync(Guid guid)
