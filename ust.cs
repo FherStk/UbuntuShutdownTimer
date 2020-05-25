@@ -88,6 +88,9 @@ namespace UST
         }
 
         private static void InstallingClientApp(){
+            //try on /etc/profile.d/*
+            //otherwise /etc/profile
+
             var filename = "ust.service";
             var source = Path.Combine(Server.AppFolder, "files", filename);
             var dest = Path.Combine("/lib/systemd/system/", filename);
