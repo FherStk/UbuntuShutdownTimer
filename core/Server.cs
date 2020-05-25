@@ -45,7 +45,6 @@ namespace UST
         private List<Schedule> _data;          
         private CancellationTokenSource _cancel;
         private int _index;        
-        private ConcurrentBag<Action<Schedule>> _watchers;
         public Schedule Current{
             get{
                 if(_data == null || _data.Count == 0 || _index < 0 || _index >= _data.Count) return null;
@@ -60,7 +59,6 @@ namespace UST
 
             _index = -1;
             _dbus = new Worker(this);
-            _watchers = new ConcurrentBag<Action<Schedule>>();  
             _data = json.Schedule.OrderBy(x => x.Shutdown).ToList();  
             _data.ForEach((x) => {
                 var dt = x.GetShutdownDateTime();
@@ -130,14 +128,7 @@ namespace UST
             Console.WriteLine($"A new shutdown event has been successfully scheduled:");                
             Console.WriteLine(Current.ToString());
 
-            foreach(var w in _watchers)
-                w.Invoke(Current);
-
             return Current;
-        }
-
-        public void AddWatcher(Action<Schedule> a){
-            _watchers.Add(a);
         }
     }
 }

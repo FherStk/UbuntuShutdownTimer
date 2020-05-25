@@ -11,24 +11,16 @@ namespace UST1.DBus
 {        
     [DBusInterface("net.xeill.elpuig.UST1")]
     interface IUST1 : IDBusObject
-    {
+    {        
         Task<Schedule> RequestScheduleAsync();        
-        Task<Schedule> CancelScheduleAsync(Guid guid);
+        Task CancelScheduleAsync(Guid guid);
         Task<IDisposable> WatchChangesAsync(Action<Schedule> handler);
     }
 
-    // [DBusInterface("net.xeill.elpuig.UST1.Schedule")]
-    // public interface ISchedule : IDBusObject, IDisposable   //TODO: check how DBus.DBus is doing it...
-    // {
-    //     Guid GUID {get; set;}
-        
-    //     DateTime Shutdown {get; set;}
-        
-    //     ScheduleMode Mode {get; set;}
-    // }
-
     class Worker : IUST1
     {        
+
+        public event Action<Schedule> OnCancel;
 
         public static string Path { get { return _path.ToString(); } }        
 
@@ -49,18 +41,20 @@ namespace UST1.DBus
             return Task.FromResult(Server.Current);
         }
 
-        public Task<IDisposable> WatchChangesAsync(Action<Schedule> handler)
-        {
-            //Server.AddWatcher(handler);
-            //return Task.FromResult<IDisposable>(Server.Current);
-            return Task.FromResult<IDisposable>(new Connection(""));
+        public Task<IDisposable> WatchChangesAsync(Action<Schedule> reply)
+        {            
+            return SignalWatcher.AddAsync(Server.Current, nameof(OnCancel), reply);            
         }
 
-
-        public Task<Schedule> CancelScheduleAsync(Guid guid)
+        public Task CancelScheduleAsync(Guid guid)
         {
-            if(Server.Current.GUID.Equals(guid)) return Task.FromResult(Server.Next());
-            else return Task.FromResult(Server.Current);
+            if(!Server.Current.GUID.Equals(guid)) return Task.FromResult(Server.Current);
+            else {
+                var s = Server.Next();
+                OnCancel?.Invoke(s);                
+                
+                return new Task(() => {});
+            }
         }
     }
 }

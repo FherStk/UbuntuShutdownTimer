@@ -56,27 +56,7 @@ namespace UST
         public void Dispose(){
 
         }
-    }
-    
-    // public class Schedule : UST1.DBus.ISchedule{    
-    //     public Guid GUID {get; set;}
-    //     public DateTime Shutdown {get; set;}
-
-    //     [JsonConverter(typeof(ScheduleModeConverter))]
-    //     public ScheduleMode Mode {get; set;}
-
-    //     public ObjectPath ObjectPath { get { return _path; } }
-
-    //     private static readonly ObjectPath _path = new ObjectPath("/net/xeill/elpuig/UST1/Schedule"); 
-
-    //     public void Dispose(){
-
-    //     }
-
-    //     public override string ToString(){           
-    //         return $"  - GUID: {GUID.ToString()} \n  - Mode: {Mode.ToString()}\n  - Shutdown on: {Shutdown.ToString()}";
-    //     }
-    // }
+    }    
 
     public class ScheduleModeConverter : JsonConverter<ScheduleMode>
     {        
