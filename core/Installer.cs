@@ -38,31 +38,43 @@ namespace UST
         public void Install(){
             Console.WriteLine("Installation requested: ", DateTime.Now.Year);
             InstallDbusPolicies();
+            Console.WriteLine();
+
             InstallingServerService();
+            Console.WriteLine();
+
             InstallingClientApp();
+            Console.WriteLine();
+
             ReloadDbusConfig();            
         }
         
          public void Uninstall(){
             Console.WriteLine("Uninstallation requested: ", DateTime.Now.Year);
             UninstallDbusPolicies();
+            Console.WriteLine();
+
             UninstallingServerService();
+            Console.WriteLine();
+
             UninstallingClientApp();
+            Console.WriteLine();
+
             ReloadDbusConfig();            
         }
-        
+
         private void InstallDbusPolicies(){
             var source = Path.Combine(Utils.AppFolder, "files", _dbusFile);
             var dest = Path.Combine(_dbusFolder, _dbusFile);
 
-            Console.WriteLine("  Setting up the dbus policies:");            
+            Console.WriteLine("  Setting up the dbus policies ({0}):", dest);            
             if(!File.Exists(dest)){
-                Console.Write("    Creating the file {0}... ", dest);
+                Console.Write("    Creating the file... ");
                 File.Copy(source, dest);
                 Console.WriteLine("OK");
             }
             else{
-                Console.Write("    Updating the file {0}... ", dest);
+                Console.Write("    Updating the file... ");
                 XmlDocument doc = new XmlDocument();
                 doc.PreserveWhitespace = true;
                 doc.Load(dest);
@@ -92,13 +104,14 @@ namespace UST
                 doc.Save(dest);
                 Console.WriteLine("OK");
             } 
+            Console.WriteLine("    Done!");
         }
 
         private void UninstallDbusPolicies(){
             var source = Path.Combine(Utils.AppFolder, "files", _dbusFile);
             var dest = Path.Combine(_dbusFolder, _dbusFile);
 
-            Console.WriteLine("  Removing the dbus policies:");            
+            Console.WriteLine("  Removing the dbus policies ({0}):", dest);            
             if(File.Exists(dest)){                               
                 XmlDocument doc = new XmlDocument();
                 doc.PreserveWhitespace = true;
@@ -109,7 +122,7 @@ namespace UST
                 var attrName = "context";
                 var attrValue = "default";
                 
-                Console.WriteLine("  Removing the dbus entries... ");            
+                Console.Write("    Removing the dbus entries... ");            
                 var def = doc.DocumentElement.SelectSingleNode($"/{root}/{nodeName}[@{attrName}='{attrValue}']");
                 if(def != null){
                     nodeName = "allow";
@@ -130,6 +143,7 @@ namespace UST
                 }
                 Console.WriteLine("OK");
             } 
+            Console.WriteLine("    Done!");
         }
 
         private void InstallingServerService(){
@@ -137,47 +151,50 @@ namespace UST
             var dest = Path.Combine(_serverFolder, _serverFile);
                         
             if(File.Exists(dest)) UninstallingServerService();
+            Console.WriteLine();
             
-            Console.WriteLine("  Setting up the server service:");
-            Console.Write("    Creating the new service {0}... ", dest);
+            Console.WriteLine($"  Setting up the server service ({_serverFile}):");
+            Console.Write("    Creating the new service... ");
             File.WriteAllText(dest, String.Format(File.ReadAllText(source), Utils.AppFolder));               
             Console.WriteLine("OK");
 
-            Console.WriteLine("    Reloading the services daemon... ");
-            Utils.RunShellCommand("sudo systemctl daemon-reload");
+            Console.Write("    Reloading the services daemon... ");
+            Utils.RunShellCommand("sudo systemctl daemon-reload", true);
             Console.WriteLine("OK");
 
-            Console.WriteLine("    Enabling the service... ");
-            Utils.RunShellCommand($"sudo systemctl enable {_serverFile}");
+            Console.Write("    Enabling the service... ");
+            Utils.RunShellCommand($"sudo systemctl enable {_serverFile}", true);
             Console.WriteLine("OK");
 
-            Console.WriteLine("    Starting the service... ");
-            Utils.RunShellCommand($"sudo systemctl start {_serverFile}");
-            Console.WriteLine("OK");            
+            Console.Write("    Starting the service... ");
+            Utils.RunShellCommand($"sudo systemctl start {_serverFile}", true);
+            Console.WriteLine("OK"); 
+            Console.WriteLine("    Done!");           
         }
 
         private void UninstallingServerService(){
             var source = Path.Combine(Utils.AppFolder, "files", _serverFile);
             var dest = Path.Combine(_serverFolder, _serverFile);
             
-            Console.WriteLine("  Removing the server service:");
+            Console.WriteLine($"  Removing the server service ({_serverFile}):");
             if(File.Exists(dest)){                      
-                Console.WriteLine("    Stopping the service... ");
-                Utils.RunShellCommand($"sudo systemctl stop {_serverFile}");
+                Console.Write("    Stopping the service... ");
+                Utils.RunShellCommand($"sudo systemctl stop {_serverFile}", true);
                 Console.WriteLine("OK");
 
-                Console.WriteLine("    Disabling the service... ");
-                Utils.RunShellCommand($"sudo systemctl disable {_serverFile}");
+                Console.Write("    Disabling the service... ");
+                Utils.RunShellCommand($"sudo systemctl disable {_serverFile}", true);
                 Console.WriteLine("OK");
 
-                Console.Write("    Removing the old service {0}... ", dest);
+                Console.Write("    Removing the service... ");
                 File.Delete(dest);
                 Console.WriteLine("OK");
 
-                Console.WriteLine("    Reloading the services daemon... ");
-                Utils.RunShellCommand("sudo systemctl daemon-reload");
+                Console.Write("    Reloading the services daemon... ");
+                Utils.RunShellCommand("sudo systemctl daemon-reload", true);
                 Console.WriteLine("OK");
-            }           
+            } 
+            Console.WriteLine("    Done!");          
         }
 
         private void InstallingClientApp(){
@@ -185,37 +202,40 @@ namespace UST
             var dest = Path.Combine(_clientFolder, _clientFile);
                             
             if(File.Exists(dest)) UninstallingClientApp();
+            Console.WriteLine();
             
-            Console.WriteLine("  Setting up the client application:");     
-            Console.Write("    Creating the new application launcher {0}... ", dest);
+            Console.WriteLine("  Setting up the client application ({0}): ", dest);
+            Console.Write("    Creating the new application launcher... ");
             File.WriteAllText(dest, String.Format(File.ReadAllText(source), Utils.AppFolder));               
             Console.WriteLine("OK");
+            Console.WriteLine("    Done!");
         }
         
         private void UninstallingClientApp(){
             var source = Path.Combine(Utils.AppFolder, "files", _clientFile);
             var dest = Path.Combine(_clientFolder, _clientFile);
                 
-            Console.WriteLine("  Removing the client application:");     
+            Console.WriteLine("  Removing the client application ({0}): ", dest);
             if(File.Exists(dest)){                 
                 //TODO: find a way to stop all clients.
                 // Console.WriteLine("    Stopping the application... ");
                 // RunShellCommand("sudo systemctl stop ust.service");
                 // Console.WriteLine("OK");
 
-                Console.Write("    Removing the old application launcher {0}... ", dest);
+                Console.Write("    Removing the old application launcher... ");
                 File.Delete(dest);
                 Console.WriteLine("OK");
             }
+            Console.WriteLine("    Done!");
         }
 
-        private async void ReloadDbusConfig(){
-            Console.WriteLine();
-            Console.Write("  Reloading dbus configuration...     ");
+        private void ReloadDbusConfig(){            
+            Console.Write("  Reloading dbus configuration... ");
             var systemConnection = Connection.System;
             var dbusManager = systemConnection.CreateProxy<IDBus>("org.freedesktop.DBus", "/org/freedesktop/DBus");
-            await dbusManager.ReloadConfigAsync();
+            dbusManager.ReloadConfigAsync();
             Console.WriteLine("OK"); 
+            Console.WriteLine("    Done!");
         }
         
         private XmlNode CreateXmlNode(XmlDocument doc, XmlNode parent, string nodeName, string attrName, string attrValue){

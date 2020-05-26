@@ -31,8 +31,10 @@ namespace UST
             }
         } 
         
-        public static string RunShellCommand(string cmd){
+        public static string RunShellCommand(string cmd, bool silent = false){
             var escapedArgs = cmd.Replace("\"", "\\\"");
+            if(silent) escapedArgs += "> /dev/null 2>&1 &";
+
             var process = new Process()
             {                
                 StartInfo = new ProcessStartInfo
@@ -42,6 +44,7 @@ namespace UST
                     RedirectStandardOutput = true,
                     UseShellExecute = false,
                     CreateNoWindow = true,
+                    WindowStyle = ProcessWindowStyle.Hidden,                    
                 }
             };
             
