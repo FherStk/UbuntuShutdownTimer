@@ -26,7 +26,6 @@ using System.Threading;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using Tmds.DBus;
 using UST1.DBus;
 
@@ -51,16 +50,11 @@ namespace UST
                 if(_data == null || _data.Count == 0 || _index < 0 || _index >= _data.Count) return null;
                 else return _data[_index];
             }
-        }
-        public static string AppFolder{
-            get{
-                return AppContext.BaseDirectory.Substring(0, AppContext.BaseDirectory.IndexOf("bin"));
-            }
-        }          
+        }                 
 
         public Server(){
             var now = DateTime.Now;       
-            var json = JsonSerializer.Deserialize<Settings>(File.ReadAllText(System.IO.Path.Combine(AppFolder, "settings", "settings.json")));
+            var json = JsonSerializer.Deserialize<Settings>(File.ReadAllText(System.IO.Path.Combine(Utils.AppFolder, "settings", "settings.json")));
             if(json.Schedule.Length == 0) throw new Exception("No data has been provided, please fill the setting.json file.");  
 
             _index = -1;
