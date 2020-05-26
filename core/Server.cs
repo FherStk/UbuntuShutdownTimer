@@ -115,7 +115,10 @@ namespace UST
             //If all the schedules has been used, start again for tomorrow
             if(Current == null){
                 _index = 0;
-                _data.ForEach(x => x.SetShutdownDateTime(x.GetShutdownDateTime().AddDays(1)));                                
+                _data.ForEach(x => {
+                    x.GUID = Guid.NewGuid();
+                    x.SetShutdownDateTime(x.GetShutdownDateTime().AddDays(1));                    
+                });                                
             }
             
             //###### INIT DEVEL (REMOVE ON PRODUCTION) ######

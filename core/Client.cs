@@ -33,6 +33,8 @@ namespace UST
     class Client
     {
         private CancellationTokenSource _cancel;
+
+        private Schedule _current;
         
         private IUST1 _dbus;
         
@@ -42,21 +44,33 @@ namespace UST
         public async Task Run(){  
             Console.WriteLine("Running on client mode:");
 
-            Console.Write("  Setting up connection...       ");
+            Console.Write("  Setting up connection...             ");
             using(var connection = Connection.System){
                 Console.WriteLine("OK");
                 
-                Console.Write("  Conneting to dbus interface... ");
+                Console.Write("  Conneting to dbus interface...       ");
                 _dbus = connection.CreateProxy<IUST1>(UST1.DBus.Worker.Service, UST1.DBus.Worker.Path);
-                Console.WriteLine("OK");
+                Console.WriteLine("OK");                
+
+                Console.Write("  Subscribing to dbus notifications... ");
+                await _dbus.WatchChangesAsync((sn) => {
+                    Console.WriteLine("The server cancelled the current scheduled popup:"); 
+                    Console.WriteLine(_current.ToString());  
+                    Console.WriteLine();
+                                    
+                    _cancel.Cancel();   //cancel the popup event 
+                    _current = sn;             
+                    SchedulePopup();  //schedule the new event                                
+                });
+                Console.WriteLine("OK");  
                 Console.WriteLine();
             
                 Console.WriteLine("Requesting for the current shutdown event data:");
-                var s = await _dbus.RequestScheduleAsync();            
-                Console.WriteLine(s.ToString());
+                _current = await _dbus.RequestScheduleAsync();            
+                Console.WriteLine(_current.ToString());
                 Console.WriteLine();
-
-                SchedulePopup(s);
+                
+                SchedulePopup();
 
                 Console.WriteLine("Client ready and waiting!"); 
                 Console.WriteLine();  
@@ -67,46 +81,37 @@ namespace UST
             }    
         }     
 
-        private void SchedulePopup(Schedule s){                    
+        private void SchedulePopup(){                    
             Console.WriteLine("Schedulling a new popup: ");
-            Console.WriteLine(s.ToString());
+            Console.WriteLine(_current.ToString());
             Console.WriteLine();          
 
             _cancel = new CancellationTokenSource();
-            Task.Delay((int)(s.GetPopupDateTime() - DateTime.Now).TotalMilliseconds, _cancel.Token).ContinueWith(t =>
+            Task.Delay((int)(_current.GetPopupDateTime() - DateTime.Now).TotalMilliseconds, _cancel.Token).ContinueWith(t =>
             {
                 if(!t.IsCanceled){
                     Console.WriteLine("Rising the current scheduled popup: ");  
-                    Console.WriteLine(s.ToString());  
+                    Console.WriteLine(_current.ToString());  
                     Console.WriteLine();                          
                     
                     //Get user response (cancel or continue)
-                    Cancel(s);
-                    //Continue(s);
+                    Cancel();
+                    //Continue();
                 }
-            });
-
-            _dbus.WatchChangesAsync((sn) => {
-                Console.WriteLine("The server cancelled the current scheduled popup:"); 
-                Console.WriteLine(s.ToString());  
-                Console.WriteLine();
-
-                _cancel.Cancel();                 
-                SchedulePopup(sn);
-            });                                
+            });        
         }
 
-        private void Cancel(Schedule s){
+        private void Cancel(){
             Console.WriteLine("The user requests for cancellation over the current scheduled shutdown:"); 
-            Console.WriteLine(s.ToString());  
+            Console.WriteLine(_current.ToString());  
             Console.WriteLine();
            
-            _dbus.CancelScheduleAsync(s.GUID);
+            _dbus.CancelScheduleAsync(_current.GUID);
         }
 
-        private void Continue(Schedule s){
+        private void Continue(){
             Console.WriteLine("The user accepts the current scheduled shutdown:");
-            Console.WriteLine(s.ToString());  
+            Console.WriteLine(_current.ToString());  
             Console.WriteLine();
         }
     }
