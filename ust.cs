@@ -88,50 +88,36 @@ namespace UST
         }
 
         private static void InstallingClientApp(){
-            //try on /etc/profile.d/*
-            //otherwise /etc/profile
-
-            var filename = "ust.service";
+            var filename = "ust-client.sh";
             var source = Path.Combine(Server.AppFolder, "files", filename);
-            var dest = Path.Combine("/lib/systemd/system/", filename);
+            var dest = Path.Combine("/etc/profile.d/", filename);
                 
-            if(File.Exists(dest)){
-                Console.WriteLine("  Setting up the server service:");      
-                Console.WriteLine("    Stopping the service... ");
-                RunShellCommand("sudo systemctl stop ust.service");
-                Console.WriteLine("OK");
+            Console.WriteLine("  Setting up the client application:");     
+            if(File.Exists(dest)){                 
+                //TODO: find a way to stop all clients.
+                // Console.WriteLine("    Stopping the application... ");
+                // RunShellCommand("sudo systemctl stop ust.service");
+                // Console.WriteLine("OK");
 
-                Console.Write("    Removing the old service {0}... ", dest);
+                Console.Write("    Removing the old application launcher {0}... ", dest);
                 File.Delete(dest);
                 Console.WriteLine("OK");
             }
             
-            Console.Write("    Creating the new service {0}... ", dest);
+            Console.Write("    Creating the new application launcher {0}... ", dest);
             File.WriteAllText(dest, String.Format(File.ReadAllText(source), Server.AppFolder));               
             Console.WriteLine("OK");
-
-            Console.WriteLine("    Reloading the services daemon... ");
-            RunShellCommand("sudo systemctl daemon-reload");
-            Console.WriteLine("OK");
-
-            Console.WriteLine("    Enabling the service... ");
-            RunShellCommand("sudo systemctl enable ust.service");
-            Console.WriteLine("OK");
-
-            Console.WriteLine("    Starting the service... ");
-            RunShellCommand("sudo systemctl start ust.service");
-            Console.WriteLine("OK");            
         }
 
         private static void InstallingServerService(){
-            var filename = "ust.service";
+            var filename = "ust-server.service";
             var source = Path.Combine(Server.AppFolder, "files", filename);
             var dest = Path.Combine("/lib/systemd/system/", filename);
-                
-            if(File.Exists(dest)){
-                Console.WriteLine("  Setting up the server service:");      
+            
+            Console.WriteLine("  Setting up the server service:");
+            if(File.Exists(dest)){                      
                 Console.WriteLine("    Stopping the service... ");
-                RunShellCommand("sudo systemctl stop ust.service");
+                RunShellCommand($"sudo systemctl stop {filename}");
                 Console.WriteLine("OK");
 
                 Console.Write("    Removing the old service {0}... ", dest);
@@ -148,11 +134,11 @@ namespace UST
             Console.WriteLine("OK");
 
             Console.WriteLine("    Enabling the service... ");
-            RunShellCommand("sudo systemctl enable ust.service");
+            RunShellCommand($"sudo systemctl enable {filename}");
             Console.WriteLine("OK");
 
             Console.WriteLine("    Starting the service... ");
-            RunShellCommand("sudo systemctl start ust.service");
+            RunShellCommand($"sudo systemctl start {filename}");
             Console.WriteLine("OK");            
         }
 

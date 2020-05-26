@@ -82,7 +82,7 @@ namespace UST
                     
                     //Get user response (cancel or continue)
                     //Cancel(s);
-                    Continue(s);
+                    //Continue(s);
                 }
             });
 
