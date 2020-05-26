@@ -229,7 +229,8 @@ namespace UST
             Console.WriteLine("    Done!");
         }
 
-        private void ReloadDbusConfig(){            
+        private void ReloadDbusConfig(){      
+            //TODO: Restart still required...      
             Console.Write("  Reloading dbus configuration... ");
             var systemConnection = Connection.System;
             var dbusManager = systemConnection.CreateProxy<IDBus>("org.freedesktop.DBus", "/org/freedesktop/DBus");

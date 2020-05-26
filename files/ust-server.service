@@ -4,6 +4,8 @@ After=multi-user.target
 
 [Service]
 ExecStart=/snap/bin/dotnet-sdk.dotnet run -c Release -p {0} --server
+WorkingDirectory={0}
+User=root
 Type=simple
 
 [Install]
