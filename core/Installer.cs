@@ -36,6 +36,9 @@ namespace UST
         private string _serverFolder = "/lib/systemd/system/";
   
         public void Install(){
+            var source = Path.Combine(Utils.AppFolder, "files", _serverFile);
+            var test = String.Format(File.ReadAllText(source), AppContext.BaseDirectory);
+
             Console.WriteLine("Installation requested: ", DateTime.Now.Year);
             InstallDbusPolicies();
             Console.WriteLine();
@@ -155,7 +158,7 @@ namespace UST
             
             Console.WriteLine($"  Setting up the server service ({_serverFile}):");
             Console.Write("    Creating the new service... ");
-            File.WriteAllText(dest, String.Format(File.ReadAllText(source), Utils.AppFolder));               
+            File.WriteAllText(dest, String.Format(File.ReadAllText(source), AppContext.BaseDirectory));               
             Console.WriteLine("OK");
 
             Console.Write("    Reloading the services daemon... ");
@@ -206,7 +209,7 @@ namespace UST
             
             Console.WriteLine("  Setting up the client application ({0}): ", dest);
             Console.Write("    Creating the new application launcher... ");
-            File.WriteAllText(dest, String.Format(File.ReadAllText(source), Utils.AppFolder));               
+            File.WriteAllText(dest, String.Format(File.ReadAllText(source), AppContext.BaseDirectory));               
             Console.WriteLine("OK");
             Console.WriteLine("    Done!");
         }

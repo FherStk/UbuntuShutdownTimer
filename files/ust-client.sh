@@ -1,2 +1,2 @@
 #Runs a Ubuntu Shutdown Timer client instance
-/snap/bin/dotnet-sdk.dotnet run -c Release -p {0} --client
+/snap/bin/dotnet-sdk.dotnet run --no-build {0} --client

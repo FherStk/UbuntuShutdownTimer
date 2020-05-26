@@ -81,7 +81,7 @@ namespace UST
                     Console.WriteLine();                          
                     
                     //Get user response (cancel or continue)
-                    //Cancel(s);
+                    Cancel(s);
                     //Continue(s);
                 }
             });
