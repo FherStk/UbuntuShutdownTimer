@@ -93,53 +93,36 @@ namespace UST
                 if(!t.IsCanceled){
                     Console.WriteLine("Rising the current scheduled popup: ");  
                     Console.WriteLine(_current.ToString());  
-                    Console.WriteLine();                          
-                    
-                    var title = "Aturada automàtica de l'equip";
-                    var message = $"Aquest equip te programada una aturada automàtica a les <b>{_current.GetShutdownDateTime().TimeOfDay.ToString()}</b>.\nSi su plau, desi els treballs en curs i tanqui totes les aplicacions";
-                    var zenity = $"zenity --progress --title=\"{title}\" --text=\"{message}\" --percentage=0 --auto-close --auto-kill --time-remaining";                    
-
-                    //Get user response (cancel or continue)
-                    //Cancel();
-                    switch(_current.Mode){                       
-                        case ScheduleMode.INFORMATIVE:
-                            //zenity --notification --text="Hola" --window-icon="info"
-                            //lo mismo que cancellable pero con --no-cancel
-                            message += ".";
-                            break;
-
-                        case ScheduleMode.CANCELLABLE:
-                            message += " o premi 'cancel·lar per anul·lar l'aturada automàtca de l'equip.";
-                            zenity += "--no-cancel";                           
-                            break;
-                    }
-
-                    if(_current.Mode != ScheduleMode.SILENT){
-                        var script = $@"
-                            #!/bin/bash
-                            i=0
-                            p=0
-
-                            while [ $i -lt {_current.PopupTimeframe*60} ]
-                            do
-                                    i=$[$i + 1]
-                                    echo $((10 * i))
-                                    sleep 1
-                                    p=$[$p + 1]
-                            done > >({zenity})
-                            echo 'shutdown'
-                        ";
-
-                        //Unable to read output (broken pipe...)
-                        //var result = Utils.RunShellCommand(script);
-                        var result = Utils.RunShellCommand(Path.Combine(Utils.AppFolder, "files", "notify.sh"));
-                        Utils.RunShellCommand($"echo {result}");
-                        //var tmp = 0;
-                    }
-
-                    //Continue();
+                    Console.WriteLine();                                              
+                    Question();
                 }
             });        
+        }
+
+        private void Question(){
+            var title = "Aturada automàtica de l'equip";
+            var message = $"Aquest equip te programada una aturada automàtica a les <b>{_current.GetShutdownDateTime().TimeOfDay.ToString()}</b>.\n\nSi su plau, desi els treballs en curs i tanqui totes les aplicacions";
+            var timeout = _current.PopupTimeframe*60;                    
+            var cancel = string.Empty;
+
+            switch(_current.Mode){                       
+                case ScheduleMode.INFORMATIVE:                           
+                    message += ".";
+                    cancel += "--no-cancel";     
+                    break;
+
+                case ScheduleMode.CANCELLABLE:
+                    message += " o premi 'cancel·lar per anul·lar l'aturada automàtca de l'equip.";                                                  
+                    break;
+            }
+
+            if(_current.Mode == ScheduleMode.SILENT) Silent();
+            else
+            {                       
+                var result = Utils.RunShellCommand($"{Path.Combine(Utils.AppFolder, "files", "notify.sh")} {timeout} {title} {message} {cancel}");
+                if(result.StartsWith("shutdow")) Continue();
+                else Cancel();
+            }
         }
 
         private void Cancel(){
@@ -148,12 +131,24 @@ namespace UST
             Console.WriteLine();
            
             _dbus.CancelScheduleAsync(_current.GUID);
+            Utils.RunShellCommand("zenity --notification --text=\"Heu cancel·lat l'aturada automàtica de l'equip, si us plau, \n<b>recordeu aturar-la manualment</b> quan acabeu de fer-la servir.\"");
         }
 
         private void Continue(){
             Console.WriteLine("The user accepts the current scheduled shutdown:");
             Console.WriteLine(_current.ToString());  
             Console.WriteLine();
+
+            _dbus.CancelScheduleAsync(_current.GUID);
+            Utils.RunShellCommand("zenity --notification --text=\"L'equip <b>s'aturarà</b> automàticament en breus moments\"");
+        }
+
+        private void Silent(){
+            Console.WriteLine("The current scheduled shutdown is runing on silent mode:"); 
+            Console.WriteLine(_current.ToString());  
+            Console.WriteLine();
+           
+            _dbus.CancelScheduleAsync(_current.GUID);
         }
     }
 }
