@@ -156,7 +156,7 @@ namespace UST
             if(File.Exists(dest)) UninstallingServerService();
             Console.WriteLine();
             
-            Console.WriteLine($"  Setting up the server service ({_serverFile}):");
+            Console.WriteLine($"  Setting up the server service ({dest}):");
             Console.Write("    Creating the new service... ");
             File.WriteAllText(dest, String.Format(File.ReadAllText(source), AppContext.BaseDirectory));               
             Console.WriteLine("OK");
@@ -179,7 +179,7 @@ namespace UST
             var source = Path.Combine(Utils.AppFolder, "files", _serverFile);
             var dest = Path.Combine(_serverFolder, _serverFile);
             
-            Console.WriteLine($"  Removing the server service ({_serverFile}):");
+            Console.WriteLine($"  Removing the server service ({dest}):");
             if(File.Exists(dest)){                      
                 Console.Write("    Stopping the service... ");
                 Utils.RunShellCommand($"sudo systemctl stop {_serverFile}", true);

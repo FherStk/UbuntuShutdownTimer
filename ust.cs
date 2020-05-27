@@ -64,6 +64,7 @@ namespace UST
             Console.WriteLine("  --client        Runs the application as a client (needs GUI user account).");            
             Console.WriteLine("  --install       Installs the application (needs root permissions).");            
             Console.WriteLine("  --uninstall     Uninstalls the application (needs root permissions).");
+            //dotnet publish -r linux-x64 -c Release
         }
 
         
