@@ -1,4 +1,4 @@
-# Ubuntu Shutdown Timer v1.0.0.0 (alpha-1)
+# Ubuntu Shutdown Timer
 
 ## WARNING
 Under developement, it wont work properly till this warning dissapears :p
