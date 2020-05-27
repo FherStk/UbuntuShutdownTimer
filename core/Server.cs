@@ -131,7 +131,8 @@ namespace UST
                     Console.WriteLine("Shutting down the computer for the current scheduled event:");
                     Console.WriteLine(Current.ToString());
                     Console.WriteLine();
-                    Console.WriteLine("SHUTDOWN!");  
+                    //Console.WriteLine("SHUTDOWN!");  
+                    Utils.RunShellCommand("poweroff", true);
                 }
             });
             

@@ -1,10 +1,16 @@
-# Ubuntu Shutdown Timer
+# Ubuntu Shutdown Timer v1.0.0.0 (alpha-1)
 
 ## WARNING
 Under developement, it wont work properly till this warning dissapears :p
 
 ## What does it do?
-Ubuntu Shutdown Timer (UST from now on) is a python3 program that allows scheduling a set of automated shutdowns for computers running Ubuntu OS (18.04 and above). With an in advance configurable warning, a popup message can be displayed to the current user in order to inform about the shutdown event and even allowing him/she to abort it.
+Ubuntu Shutdown Timer (UST from now on) is a C# (over the .NET Core Framework 3.1) program that allows scheduling a set of automated shutdowns for computers running Ubuntu Desktop OS (20.04 and above), including a set of configurable user-oriented warnings that can be used to cancel the scheduled shutdowns (or just to warn about an inminent poweroff).
+
+## How to install
+1. Download the lastest release wherever you want to install the application (for example in `/usr/local/ust`).
+2. Update the `files/settings.json` settings file to fit up your needs.
+3. As **root**, install the application with `ust --install` which will setup the server and client instances.
+4. Congrats! The application is ready and working :)
 
 ## How does it work?
 It has been built on a client-server architecture that uses sockets for communication, because it must works properly when a user is logged in (or a set of users are using the same machine) and even when there's no user logged in. 
