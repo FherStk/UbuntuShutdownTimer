@@ -119,13 +119,14 @@ namespace UST
                             i=0
                             p=0
 
-                            (while [ $i -lt {_current.PopupTimeframe*60} ]
+                            while [ $i -lt {_current.PopupTimeframe*60} ]
                             do
                                     i=$[$i + 1]
                                     echo $((10 * i))
                                     sleep 1
                                     p=$[$p + 1]
-                            done) | {zenity}                            
+                            done > >({zenity})
+                            echo 'shutdown'
                         ";
 
                         //Unable to read output (broken pipe...)
