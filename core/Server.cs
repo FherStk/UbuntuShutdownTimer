@@ -31,9 +31,6 @@ using UST1.DBus;
 
 namespace UST
 {   
-    //Tested multi-server and multi-client; only the last registered server is processing the requests
-    //All the registered clients are working ok, only 1 server can work ok.
-
     class Server
     {
         private class Settings{
@@ -122,9 +119,9 @@ namespace UST
             }
             
             //###### INIT DEVEL (REMOVE ON PRODUCTION) ######
-            Current.SetShutdownDateTime(DateTime.Now.AddMinutes(2));
-            Current.PopupTimeframe = 1;
-            Current.Mode = ScheduleMode.INFORMATIVE;
+            //Current.SetShutdownDateTime(DateTime.Now.AddMinutes(2));
+            //Current.PopupTimeframe = 1;
+            //Current.Mode = ScheduleMode.INFORMATIVE;
             //###### END  DEVEL (REMOVE ON PRODUCTION) ######
             
             _cancel = new CancellationTokenSource();

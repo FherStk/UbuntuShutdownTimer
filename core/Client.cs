@@ -28,9 +28,6 @@ using UST1.DBus;
 
 namespace UST
 {   
-    //Tested multi-server and multi-client; only the last registered server is processing the requests
-    //All the registered clients are working ok, only 1 server can work ok.
-
     class Client
     {
         private CancellationTokenSource _cancel;
@@ -59,9 +56,9 @@ namespace UST
                     Console.WriteLine(_current.ToString());  
                     Console.WriteLine();
                                     
-                    _cancel.Cancel();   //cancel the popup event 
+                    _cancel.Cancel();   
                     _current = sn;             
-                    SchedulePopup();  //schedule the new event                                
+                    SchedulePopup();  
                 });
                 Console.WriteLine("OK");  
                 Console.WriteLine();
