@@ -20,6 +20,7 @@
 */
 
 using System;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Tmds.DBus;
@@ -130,7 +131,8 @@ namespace UST
                         ";
 
                         //Unable to read output (broken pipe...)
-                        var result = Utils.RunShellCommand(script);
+                        //var result = Utils.RunShellCommand(script);
+                        var result = Utils.RunShellCommand(Path.Combine(Utils.AppFolder, "files", "notify.sh"));
                         Utils.RunShellCommand($"echo {result}");
                         //var tmp = 0;
                     }
