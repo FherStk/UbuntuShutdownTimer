@@ -48,8 +48,7 @@ namespace UST
                     Arguments = $"-c \"{escapedArgs}\"",
                     RedirectStandardOutput = true,
                     UseShellExecute = false,
-                    CreateNoWindow = true,
-                    WindowStyle = ProcessWindowStyle.Hidden,                    
+                    CreateNoWindow = true               
                 }
             };
             

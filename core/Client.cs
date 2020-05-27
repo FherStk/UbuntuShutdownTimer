@@ -119,8 +119,8 @@ namespace UST
             if(_current.Mode == ScheduleMode.SILENT) Silent();
             else
             {                       
-                //var result = Utils.RunShellCommand($"{Utils.GetFilePath("notify.sh")} {timeout} \"{title}\" \"{message}\" {cancel}");
-                var result = Utils.RunShellCommand("echo shutdown");
+                //TODO: if zenity window is cancelled, broken pipe error appears... try/cath?
+                var result = Utils.RunShellCommand($"{Utils.GetFilePath("notify.sh")} {5} \"{title}\" \"{message}\" {cancel}");                
                 if(result.StartsWith("shutdow")) Continue();
                 else Cancel();
             }
