@@ -112,15 +112,14 @@ namespace UST
                     break;
 
                 case ScheduleMode.CANCELLABLE:
-                    message += " o premi 'cancel·lar per anul·lar l'aturada automàtca de l'equip.";                                                  
+                    message += " o premi 'cancel·lar' per anul·lar l'aturada automàtca de l'equip.";                                                  
                     break;
             }
 
             if(_current.Mode == ScheduleMode.SILENT) Silent();
             else
             {                       
-                //TODO: if zenity window is cancelled, broken pipe error appears... try/cath?
-                var result = Utils.RunShellCommand($"{Utils.GetFilePath("notify.sh")} {5} \"{title}\" \"{message}\" {cancel}");                
+                var result = Utils.RunShellCommand($"{Utils.GetFilePath("notify.sh")} {timeout} \"{title}\" \"{message}\" {cancel}");                
                 if(result.StartsWith("shutdow")) Continue();
                 else Cancel();
             }
