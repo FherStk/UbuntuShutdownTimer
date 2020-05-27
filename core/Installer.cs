@@ -70,14 +70,14 @@ namespace UST
             var source = Path.Combine(Utils.AppFolder, "files", _dbusFile);
             var dest = Path.Combine(_dbusFolder, _dbusFile);
 
-            Console.WriteLine("  Setting up the dbus policies ({0}):", dest);            
+            Console.WriteLine("  Setting up the D-Bus policies ({0}):", dest);            
             if(!File.Exists(dest)){
-                Console.Write("    Creating the file... ");
+                Console.Write("    Creating file... ");
                 File.Copy(source, dest);
                 Console.WriteLine("OK");
             }
             else{
-                Console.Write("    Updating the file... ");
+                Console.Write("    Updating entries... ");
                 XmlDocument doc = new XmlDocument();
                 doc.PreserveWhitespace = true;
                 doc.Load(dest);
@@ -114,7 +114,7 @@ namespace UST
             var source = Path.Combine(Utils.AppFolder, "files", _dbusFile);
             var dest = Path.Combine(_dbusFolder, _dbusFile);
 
-            Console.WriteLine("  Removing the dbus policies ({0}):", dest);            
+            Console.WriteLine("  Removing the D-Bus policies ({0}):", dest);            
             if(File.Exists(dest)){                               
                 XmlDocument doc = new XmlDocument();
                 doc.PreserveWhitespace = true;
@@ -125,7 +125,7 @@ namespace UST
                 var attrName = "context";
                 var attrValue = "default";
                 
-                Console.Write("    Removing the dbus entries... ");            
+                Console.Write("    Removing entries... ");            
                 var def = doc.DocumentElement.SelectSingleNode($"/{root}/{nodeName}[@{attrName}='{attrValue}']");
                 if(def != null){
                     nodeName = "allow";
@@ -233,12 +233,25 @@ namespace UST
         }
 
         private void ReloadDbusConfig(){      
-            //TODO: Restart still required...      
-            Console.Write("  Reloading dbus configuration... ");
+            /*
+                http://manpages.ubuntu.com/manpages/bionic/man1/dbus-daemon.1.html
+
+                SIGHUP will cause the D-Bus daemon to PARTIALLY reload its configuration file and to flush
+                its user/group information caches. Some configuration changes would require kicking all
+                apps off the bus; so they will only take effect if you restart the daemon. Policy changes
+                should take effect with SIGHUP.
+            */    
+            Console.WriteLine("  Updating D-Bus: ");
+            Console.Write("    Reloading configuration... ");
             var systemConnection = Connection.System;
             var dbusManager = systemConnection.CreateProxy<IDBus>("org.freedesktop.DBus", "/org/freedesktop/DBus");
             dbusManager.ReloadConfigAsync();
             Console.WriteLine("OK"); 
+
+            Console.Write("    Reloading daemon...        ");
+            Utils.RunShellCommand("pkill -HUP dbus-daemon", true);
+            Console.WriteLine("OK"); 
+            
             Console.WriteLine("    Done!");
         }
         
