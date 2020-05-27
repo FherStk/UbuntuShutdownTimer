@@ -72,12 +72,12 @@ namespace UST
 
             Console.WriteLine("  Setting up the D-Bus policies ({0}):", dest);            
             if(!File.Exists(dest)){
-                Console.Write("    Creating file... ");
+                Console.Write("    Creating file...                    ");
                 File.Copy(source, dest);
                 Console.WriteLine("OK");
             }
             else{
-                Console.Write("    Updating entries... ");
+                Console.Write("    Updating entries...                 ");
                 XmlDocument doc = new XmlDocument();
                 doc.PreserveWhitespace = true;
                 doc.Load(dest);
@@ -125,7 +125,7 @@ namespace UST
                 var attrName = "context";
                 var attrValue = "default";
                 
-                Console.Write("    Removing entries... ");            
+                Console.Write("    Removing entries...                 ");            
                 var def = doc.DocumentElement.SelectSingleNode($"/{root}/{nodeName}[@{attrName}='{attrValue}']");
                 if(def != null){
                     nodeName = "allow";
@@ -157,19 +157,19 @@ namespace UST
             Console.WriteLine();
             
             Console.WriteLine($"  Setting up the server service ({dest}):");
-            Console.Write("    Creating the new service... ");
+            Console.Write("    Creating the new service...         ");
             File.WriteAllText(dest, String.Format(File.ReadAllText(source), AppContext.BaseDirectory));               
             Console.WriteLine("OK");
 
-            Console.Write("    Reloading the services daemon... ");
+            Console.Write("    Reloading the services daemon...    ");
             Utils.RunShellCommand("sudo systemctl daemon-reload", true);
             Console.WriteLine("OK");
 
-            Console.Write("    Enabling the service... ");
+            Console.Write("    Enabling the service...             ");
             Utils.RunShellCommand($"sudo systemctl enable {_serverFile}", true);
             Console.WriteLine("OK");
 
-            Console.Write("    Starting the service... ");
+            Console.Write("    Starting the service...             ");
             Utils.RunShellCommand($"sudo systemctl start {_serverFile}", true);
             Console.WriteLine("OK"); 
             Console.WriteLine("    Done!");           
@@ -181,19 +181,19 @@ namespace UST
             
             Console.WriteLine($"  Removing the server service ({dest}):");
             if(File.Exists(dest)){                      
-                Console.Write("    Stopping the service... ");
+                Console.Write("    Stopping the service...             ");
                 Utils.RunShellCommand($"sudo systemctl stop {_serverFile}", true);
                 Console.WriteLine("OK");
 
-                Console.Write("    Disabling the service... ");
+                Console.Write("    Disabling the service...            ");
                 Utils.RunShellCommand($"sudo systemctl disable {_serverFile}", true);
                 Console.WriteLine("OK");
 
-                Console.Write("    Removing the service... ");
+                Console.Write("    Removing the service...             ");
                 File.Delete(dest);
                 Console.WriteLine("OK");
 
-                Console.Write("    Reloading the services daemon... ");
+                Console.Write("    Reloading the services daemon...    ");
                 Utils.RunShellCommand("sudo systemctl daemon-reload", true);
                 Console.WriteLine("OK");
             } 
@@ -208,7 +208,7 @@ namespace UST
             Console.WriteLine();
             
             Console.WriteLine("  Setting up the client application ({0}): ", dest);
-            Console.Write("    Creating the new application launcher... ");
+            Console.Write("    Creating application launcher...    ");
             File.WriteAllText(dest, String.Format(File.ReadAllText(source), AppContext.BaseDirectory));               
             Console.WriteLine("OK");
             Console.WriteLine("    Done!");
@@ -225,7 +225,7 @@ namespace UST
                 // RunShellCommand("sudo systemctl stop ust.service");
                 // Console.WriteLine("OK");
 
-                Console.Write("    Removing the old application launcher... ");
+                Console.Write("    Removing application launcher...    ");
                 File.Delete(dest);
                 Console.WriteLine("OK");
             }
@@ -242,13 +242,13 @@ namespace UST
                 should take effect with SIGHUP.
             */    
             Console.WriteLine("  Updating D-Bus: ");
-            Console.Write("    Reloading configuration... ");
+            Console.Write("    Reloading configuration...          ");
             var systemConnection = Connection.System;
             var dbusManager = systemConnection.CreateProxy<IDBus>("org.freedesktop.DBus", "/org/freedesktop/DBus");
             dbusManager.ReloadConfigAsync();
             Console.WriteLine("OK"); 
 
-            Console.Write("    Reloading daemon...        ");
+            Console.Write("    Reloading daemon...                 ");
             Utils.RunShellCommand("pkill -HUP dbus-daemon", true);
             Console.WriteLine("OK"); 
             
