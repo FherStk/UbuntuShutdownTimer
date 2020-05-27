@@ -30,15 +30,13 @@ namespace UST
     public class Installer{
         private string _dbusFile = "system-local.conf";
         private string _dbusFolder = "/etc/dbus-1";
+        private string _notifierFile = "notify.sh";
         private string _clientFile = "ust-client.sh";
         private string _clientFolder = "/etc/profile.d/";
         private string _serverFile = "ust-server.service";
         private string _serverFolder = "/lib/systemd/system/";
   
         public void Install(){
-            var source = Path.Combine(Utils.AppFolder, "files", _serverFile);
-            var test = String.Format(File.ReadAllText(source), AppContext.BaseDirectory);
-
             Console.WriteLine("Installation requested: ", DateTime.Now.Year);
             InstallDbusPolicies();
             Console.WriteLine();
@@ -67,13 +65,12 @@ namespace UST
         }
 
         private void InstallDbusPolicies(){
-            var source = Path.Combine(Utils.AppFolder, "files", _dbusFile);
             var dest = Path.Combine(_dbusFolder, _dbusFile);
 
             Console.WriteLine("  Setting up the D-Bus policies ({0}):", dest);            
             if(!File.Exists(dest)){
                 Console.Write("    Creating file.......................");
-                File.Copy(source, dest);
+                File.Copy(Utils.GetFilePath(_dbusFile), dest);
                 Console.WriteLine("OK");
             }
             else{
@@ -111,7 +108,6 @@ namespace UST
         }
 
         private void UninstallDbusPolicies(){
-            var source = Path.Combine(Utils.AppFolder, "files", _dbusFile);
             var dest = Path.Combine(_dbusFolder, _dbusFile);
 
             Console.WriteLine("  Removing the D-Bus policies ({0}):", dest);            
@@ -150,7 +146,6 @@ namespace UST
         }
 
         private void InstallingServerService(){
-            var source = Path.Combine(Utils.AppFolder, "files", _serverFile);
             var dest = Path.Combine(_serverFolder, _serverFile);
                         
             if(File.Exists(dest)) UninstallingServerService();
@@ -158,7 +153,7 @@ namespace UST
             
             Console.WriteLine($"  Setting up the server service ({dest}):");
             Console.Write("    Creating the new service............");
-            File.WriteAllText(dest, String.Format(File.ReadAllText(source), AppContext.BaseDirectory));               
+            File.WriteAllText(dest, String.Format(File.ReadAllText(Utils.GetFilePath(_serverFile)), AppContext.BaseDirectory));               
             Console.WriteLine("OK");
 
             Console.Write("    Reloading the services daemon.......");
@@ -176,7 +171,6 @@ namespace UST
         }
 
         private void UninstallingServerService(){
-            var source = Path.Combine(Utils.AppFolder, "files", _serverFile);
             var dest = Path.Combine(_serverFolder, _serverFile);
             
             Console.WriteLine($"  Removing the server service ({dest}):");
@@ -201,21 +195,24 @@ namespace UST
         }
 
         private void InstallingClientApp(){
-            var source = Path.Combine(Utils.AppFolder, "files", _clientFile);
             var dest = Path.Combine(_clientFolder, _clientFile);
                             
             if(File.Exists(dest)) UninstallingClientApp();
             Console.WriteLine();
             
             Console.WriteLine("  Setting up the client application ({0}): ", dest);
-            Console.Write("    Creating application launcher.......");
-            File.WriteAllText(dest, String.Format(File.ReadAllText(source), AppContext.BaseDirectory));               
+            Console.Write("    Creating logon launcher.............");
+            File.WriteAllText(dest, String.Format(File.ReadAllText(Utils.GetFilePath(_clientFile)), AppContext.BaseDirectory));               
             Console.WriteLine("OK");
+
+            Console.Write("    Setting permissions.................");
+            Utils.RunShellCommand($"chmod +x {Utils.GetFilePath(_notifierFile)}", true);
+            Console.WriteLine("OK");
+
             Console.WriteLine("    Done!");
         }
         
         private void UninstallingClientApp(){
-            var source = Path.Combine(Utils.AppFolder, "files", _clientFile);
             var dest = Path.Combine(_clientFolder, _clientFile);
                 
             Console.WriteLine("  Removing the client application ({0}): ", dest);

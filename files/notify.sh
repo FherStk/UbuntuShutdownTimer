@@ -10,3 +10,4 @@ do
     p=$[$p + 1]
 done > >(zenity --progress --title="Aturada automàtica de l'equip" --text="Aquest equip te programada una aturada automàtica a les <b>05/27/2020 15:37:50</b>.\nSi su plau, desi els treballs en curs i tanqui totes les aplicacions" --percentage=0 --auto-close --auto-kill --time-remaining)
 echo 'shutdown'
+exit 0

@@ -20,6 +20,7 @@
 */
 
 using System;
+using System.IO;
 using System.Diagnostics;
 
 namespace UST
@@ -29,6 +30,10 @@ namespace UST
             get{
                 return AppContext.BaseDirectory.Substring(0, AppContext.BaseDirectory.IndexOf("bin"));
             }
+        } 
+
+        public static string GetFilePath(string filename, string folder = "files"){ 
+            return Path.Combine(Utils.AppFolder, folder, filename);           
         } 
         
         public static string RunShellCommand(string cmd, bool silent = false){
