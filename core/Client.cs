@@ -95,8 +95,8 @@ namespace UST
                     Console.WriteLine();                          
                     
                     var title = "Aturada automàtica de l'equip";
-                    var message = $"Aquest equip te programada una aturada automàtica a les <b>{_current.GetShutdownDateTime().ToString()}</b>.\nSi su plau, desi els treballs en curs i tanqui totes les aplicacions";
-                    var zenity = $"zenity --progress --title='{title}' --text='{message}' --percentage=0 --auto-close --auto-kill --time-remaining";                    
+                    var message = $"Aquest equip te programada una aturada automàtica a les <b>{_current.GetShutdownDateTime().TimeOfDay.ToString()}</b>.\nSi su plau, desi els treballs en curs i tanqui totes les aplicacions";
+                    var zenity = $"zenity --progress --title=\"{title}\" --text=\"{message}\" --percentage=0 --auto-close --auto-kill --time-remaining";                    
 
                     //Get user response (cancel or continue)
                     //Cancel();
@@ -113,25 +113,24 @@ namespace UST
                             break;
                     }
 
-                        if(_current.Mode != ScheduleMode.SILENT){
+                    if(_current.Mode != ScheduleMode.SILENT){
                         var script = $@"
                             #!/bin/bash
                             i=0
                             p=0
 
-                            while [ $i -lt {_current.PopupTimeframe*60} ]
+                            (while [ $i -lt {_current.PopupTimeframe*60} ]
                             do
                                     i=$[$i + 1]
                                     echo $((10 * i))
                                     sleep 1
                                     p=$[$p + 1]
-                            done > >({zenity})
-                            echo 'i: $i p: $p'
-                            exit 0
+                            done) | {zenity}                            
                         ";
 
                         var result = Utils.RunShellCommand(script);
-                        var tmp = 0;
+                        Utils.RunShellCommand($"echo {result}");
+                        //var tmp = 0;
                     }
 
                     //Continue();
