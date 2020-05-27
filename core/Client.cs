@@ -119,7 +119,8 @@ namespace UST
             if(_current.Mode == ScheduleMode.SILENT) Silent();
             else
             {                       
-                var result = Utils.RunShellCommand($"{Path.Combine(Utils.AppFolder, "files", "notify.sh")} {timeout} {title} {message} {cancel}");
+                //var result = Utils.RunShellCommand($"{Utils.GetFilePath("notify.sh")} {timeout} \"{title}\" \"{message}\" {cancel}");
+                var result = Utils.RunShellCommand("echo shutdown");
                 if(result.StartsWith("shutdow")) Continue();
                 else Cancel();
             }
@@ -140,7 +141,7 @@ namespace UST
             Console.WriteLine();
 
             _dbus.CancelScheduleAsync(_current.GUID);
-            Utils.RunShellCommand("zenity --notification --text=\"L'equip <b>s'aturarà</b> automàticament en breus moments\"");
+            Utils.RunShellCommand("zenity --notification --text=\"\nL'equip <b>s'aturarà</b> automàticament en breus moments...\"");
         }
 
         private void Silent(){
