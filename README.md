@@ -6,6 +6,8 @@ Under developement, it wont work properly till this warning dissapears :p
 ## What does it do?
 Ubuntu Shutdown Timer (UST from now on) is a C# (over the .NET Core Framework 3.1) program that allows scheduling a set of automated shutdowns for computers running Ubuntu Desktop OS (20.04 and above), including a set of configurable user-oriented warnings that can be used to cancel the scheduled shutdowns (or just to warn about an inminent poweroff).
 
+Please, note that event it has been developed over the .NET Core Framework 3.1, the application has been published as self-contained so there's no need to install the .NET Core SDK or runtime; it can just be executed as a regular binary!
+
 ## Third party software:
 * Tmds.DBus by Tom Deseyn: under the MIT License (https://www.nuget.org/packages/Tmds.DBus/)
 
@@ -19,13 +21,13 @@ Ubuntu Shutdown Timer (UST from now on) is a C# (over the .NET Core Framework 3.
 ### Settings
 Update the `files/settings.json` settings file to fit up your needs.
 
-- PopupTimeframe (in minutes):      Set with how much time of anticipation, a user must be warned about a shutdown event.
-- Schedule:                         Array of shutdown events, the nearest shutdown will be the first one to be scheduled (obviously, the past ones will be ignored); if the user cancels one, the next one will be scheduled.
-    - Shutdown (local datetime):    Stored as is due serialization comapibility, only the time part will be used to schedule an event.
-    - Mode     (popup behaviour):
-        - SILENT:                   No popup or warning will be displayed to the user.
-        - INFORMATIVE:              The user will be warned about an scheduled shutdown, but no interaction is allowed.
-        - CANCELLABLE:              The user will be warned about an scheduled shutdown, and is allowed to cancel the scheduled event (the server will schedule the next one in the list).
+- PopupTimeframe (in minutes): Set with how much time of anticipation, a user must be warned about a shutdown event.
+- Schedule: Array of shutdown events, the nearest shutdown will be the first one to be scheduled (obviously, the past ones will be ignored); if the user cancels one, the next one will be scheduled.
+    - Shutdown (local datetime): Stored as is due serialization comapibility, only the time part will be used to schedule an event.
+    - Mode (popup behaviour):
+        - SILENT: No popup or warning will be displayed to the user.
+        - INFORMATIVE: The user will be warned about an scheduled shutdown, but no interaction is allowed.
+        - CANCELLABLE: The user will be warned about an scheduled shutdown, and is allowed to cancel the scheduled event (the server will schedule the next one in the list).
         
 ### How to uninstall
 1. As **root**, uninstall the application with `ust --uninstall` and all the settings and changes will be reverted.
@@ -33,7 +35,7 @@ Update the `files/settings.json` settings file to fit up your needs.
 3. That's it! It's sad, but was fun :)
 
 ## How does it work?
-It has been built as a client-server application that uses D-Bus for communication, because it must works properly when a set of users are logged (sharing a computer) and also when there's no user logged at all. 
+It has been built as a client-server application that uses D-Bus for communication, because it must work properly when a set of users are logged (sharing a computer) and also when there's no user logged at all. 
 
 ### Architecture
 The application can be splitted into two main parts:
