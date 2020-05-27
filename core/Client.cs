@@ -128,6 +128,7 @@ namespace UST
                             done) | {zenity}                            
                         ";
 
+                        //Unable to read output (broken pipe...)
                         var result = Utils.RunShellCommand(script);
                         Utils.RunShellCommand($"echo {result}");
                         //var tmp = 0;
