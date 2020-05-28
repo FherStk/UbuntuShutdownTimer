@@ -21,9 +21,11 @@ Please, note that event it has been developed over the .NET Core Framework 3.1, 
 ### Settings
 Update the `files/settings.json` settings file to fit up your needs.
 
-- PopupTimeframe (in minutes): Set with how much time of anticipation, a user must be warned about a shutdown event.
+- PopupThreshold (in minutes): Set the time frame of anticipation with which a user must be warned about a shutdown event.
+- IgnoreThreshold (in minutes): Set the time frame of anticipation elapsed needed to schedule a shutdown event, so the ones that must happen before that will be ignored (not scheduled).
+- AutocancelThreshold (in minutes): Set the time frame of anticipation elapsed needed to ask for user interaction (rise a popup), so the ones that must happen before that will be automatically cancelled (the next shutdown event will be scheduled).
 - Schedule: Array of shutdown events, the nearest shutdown will be the first one to be scheduled (obviously, the past ones will be ignored); if the user cancels one, the next one will be scheduled.
-    - Shutdown (local datetime): Stored as is due serialization comapibility, only the time part will be used to schedule an event.
+    - Shutdown (local time): When the shutdown event will be fired.
     - Mode (popup behaviour):
         - SILENT: No popup or warning will be displayed to the user.
         - INFORMATIVE: The user will be warned about an scheduled shutdown, but no interaction is allowed.

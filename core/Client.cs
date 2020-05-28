@@ -85,21 +85,26 @@ namespace UST
             Console.WriteLine();          
 
             _cancel = new CancellationTokenSource();
-            Task.Delay((int)(_current.GetPopupDateTime() - DateTime.Now).TotalMilliseconds, _cancel.Token).ContinueWith(t =>
-            {
-                if(!t.IsCanceled){
-                    Console.WriteLine("Rising the current scheduled popup: ");  
-                    Console.WriteLine(_current.ToString());  
-                    Console.WriteLine();                                              
-                    Question();
-                }
-            });        
+            var time = Math.Max(0, (int)(_current.GetPopupDateTime() - DateTime.Now).TotalMilliseconds);
+
+            if(time < _current.AutocancelThreshold) Cancel(true);
+            else{
+                Task.Delay(time, _cancel.Token).ContinueWith(t =>
+                {
+                    if(!t.IsCanceled){
+                        Console.WriteLine("Rising the current scheduled popup: ");  
+                        Console.WriteLine(_current.ToString());  
+                        Console.WriteLine();                                              
+                        Question();
+                    }
+                });        
+            }
         }
 
         private void Question(){
             var title = "Aturada automàtica de l'equip";
             var message = $"Aquest equip te programada una aturada automàtica a les <b>{_current.GetShutdownDateTime().TimeOfDay.ToString()}</b>.\n\nSi su plau, desi els treballs en curs i tanqui totes les aplicacions";
-            var timeout = _current.PopupTimeframe*60;                    
+            var timeout = _current.PopupThreshold*60;                    
             var cancel = string.Empty;
 
             switch(_current.Mode){                       
@@ -122,8 +127,8 @@ namespace UST
             }
         }
 
-        private void Cancel(){
-            Console.WriteLine("The user requests for cancellation over the current scheduled shutdown:"); 
+        private void Cancel(bool auto = false){
+            Console.WriteLine($"{(auto ? "Auto-cancellation request" : "The user requests for cancellation" )} over the current scheduled shutdown:"); 
             Console.WriteLine(_current.ToString());  
             Console.WriteLine();
            

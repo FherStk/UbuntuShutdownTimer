@@ -35,7 +35,9 @@ namespace UST
     {
         private class Settings{
             public Schedule[] Schedule {get; set;}
-            public int PopupTimeframe {get; set;}
+            public int PopupThreshold {get; set;}
+            public int IgnoreThreshold {get; set;}
+            public int AutocancelThreshold {get; set;}
         }
 
         private Worker _dbus;
@@ -60,7 +62,9 @@ namespace UST
             _data.ForEach((x) => {
                 var dt = x.GetShutdownDateTime();
                 x.GUID = Guid.NewGuid();
-                x.PopupTimeframe = json.PopupTimeframe;    
+                x.PopupThreshold = json.PopupThreshold;    
+                x.IgnoreThreshold = json.IgnoreThreshold;
+                x.AutocancelThreshold = json.AutocancelThreshold;
                 x.SetShutdownDateTime(new DateTime(now.Year, now.Month, now.Day, dt.Hour, dt.Minute, dt.Second));
             });                  
         }
@@ -106,7 +110,7 @@ namespace UST
             //Get the next schedule
             var now = DateTime.Now;
             for(_index = _index+1; _index < _data.Count(); _index++){                
-                if((Current.GetShutdownDateTime() - now).TotalMilliseconds > 0) break;
+                if((Current.GetShutdownDateTime() - now).TotalMinutes > Current.IgnoreThreshold) break;
             }
 
             //If all the schedules has been used, start again for tomorrow

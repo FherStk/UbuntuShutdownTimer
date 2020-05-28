@@ -37,7 +37,9 @@ namespace UST
     {
         public Guid GUID {get; set;}
         public string Shutdown {get; set;}  //cannot be a datetime due serialization through d-bus      
-        public int PopupTimeframe {get; set;}  //in minutes
+        public int PopupThreshold {get; set;}  //in minutes
+        public int IgnoreThreshold {get; set;}  //in minutes
+        public int AutocancelThreshold {get; set;}  //in minutes        
 
         [JsonConverter(typeof(ScheduleModeConverter))]
         public ScheduleMode Mode {get; set;}       
@@ -55,7 +57,7 @@ namespace UST
         }
 
         public DateTime GetPopupDateTime(){
-            return DateTime.Parse(Shutdown).AddMinutes(-this.PopupTimeframe);
+            return DateTime.Parse(Shutdown).AddMinutes(-this.PopupThreshold);
         }
 
         public void Dispose(){
