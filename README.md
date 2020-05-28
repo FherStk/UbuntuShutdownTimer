@@ -14,12 +14,12 @@ Please, note that event it has been developed over the .NET Core Framework 3.1, 
 ## Install guide
 ### How to install
 1. Download the latest release wherever you want to install the application (for example in `/usr/local/ust`).
-2. Update the `files/settings.json` settings file to fit up your needs.
+2. Update the `settings/settings.json` settings file to fit up your needs.
 3. As **root**, install the application with `ust --install` which will setup the server and client instances.
 4. Congrats! The application is ready and working :)
 
 ### Settings
-Update the `files/settings.json` settings file to fit up your needs.
+Update the `settings/settings.json` settings file to fit up your needs.
 
 - PopupThreshold (in minutes): Set the time frame of anticipation with which a user must be warned about a shutdown event.
 - IgnoreThreshold (in minutes): Set the time frame of anticipation elapsed needed to schedule a shutdown event, so the ones that must happen before that will be ignored (not scheduled).
