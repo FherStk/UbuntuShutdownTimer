@@ -25,8 +25,7 @@ using System.Threading.Tasks;
 
 namespace UST
 {   
-    //Tested multi-server and multi-client; only the last registered server is processing the requests
-    //All the registered clients are working ok, only 1 server can work ok.
+    //dotnet publish -r linux-x64 -c Release
 
     class ust
     {
@@ -63,8 +62,7 @@ namespace UST
             Console.WriteLine("  --server        Runs the application as a server (needs a system account).");
             Console.WriteLine("  --client        Runs the application as a client (needs GUI user account).");            
             Console.WriteLine("  --install       Installs the application (needs root permissions).");            
-            Console.WriteLine("  --uninstall     Uninstalls the application (needs root permissions).");
-            //dotnet publish -r linux-x64 -c Release
+            Console.WriteLine("  --uninstall     Uninstalls the application (needs root permissions).");            
         }
 
         
