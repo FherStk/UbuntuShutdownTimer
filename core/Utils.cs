@@ -28,7 +28,9 @@ namespace UST
     public static class Utils{
         public static string AppFolder{
             get{
-                return AppContext.BaseDirectory.Substring(0, AppContext.BaseDirectory.IndexOf("bin"));
+                var path = AppContext.BaseDirectory;
+                if(path.Contains("/bin/")) path = path.Substring(0, path.IndexOf("bin"));                
+                return path;
             }
         } 
 
