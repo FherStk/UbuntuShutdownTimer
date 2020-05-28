@@ -12,11 +12,12 @@ Please, note that event it has been developed over the .NET Core Framework 3.1, 
 * Tmds.DBus by Tom Deseyn: under the MIT License (https://www.nuget.org/packages/Tmds.DBus/)
 
 ## Install guide
-### How to install
+### How to install (as root)
 1. Download the latest release wherever you want to install the application (for example in `/usr/local/ust`).
 2. Update the `settings/settings.json` settings file to fit up your needs.
-3. As **root**, install the application with `ust --install` which will setup the server and client instances.
-4. Congrats! The application is ready and working :)
+4. Set execution permissions to the application main file with `chmod +x ust`.
+5. Install the application with `./ust --install` which will setup the server and client instances.
+6. Congrats! The application is ready and working :)
 
 ### Settings
 Update the `settings/settings.json` settings file to fit up your needs.
