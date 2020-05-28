@@ -1,0 +1,19 @@
+{    
+    "Schedule": [
+        {
+            "Shutdown": "12:00:00.000Z",
+            "Mode": "SILENT"
+        },
+        {
+            "Shutdown": "14:55:00.000Z",
+            "Mode": "CANCELLABLE"
+        },
+        {
+            "Shutdown": "21:05:00.000Z",
+            "Mode": "INFORMATIVE"
+        }
+    ],
+    "PopupThreshold": 15,
+    "IgnoreThreshold": 5,
+    "AutocancelThreshold": 1
+}

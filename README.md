@@ -1,64 +1,102 @@
 # Ubuntu Shutdown Timer
 
 ## WARNING
-Under developement, it wont work properly till this warning dissapears :p
+Under development, it won't work properly till this warning disappears :p
 
 ## What does it do?
-Ubuntu Shutdown Timer (UST from now on) is a python3 program that allows scheduling a set of automated shutdowns for computers running Ubuntu OS (18.04 and above). With an in advance configurable warning, a popup message can be displayed to the current user in order to inform about the shutdown event and even allowing him/she to abort it.
+Ubuntu Shutdown Timer (UST from now on) is a C# (over the .NET Core Framework 3.1) program that allows scheduling a set of automated shutdowns for computers running Ubuntu Desktop OS (20.04 and above), including a set of configurable user-oriented warnings that can be used to cancel the scheduled shutdowns (or just to warn about an imminent power off).
+
+Please, note that event it has been developed over the .NET Core Framework 3.1, the application has been published as self-contained so there's no need to install the .NET Core SDK or runtime; it can just be executed as a regular binary!
+
+## Third party software:
+* Tmds.DBus by Tom Deseyn: under the MIT License (https://www.nuget.org/packages/Tmds.DBus/)
+
+## Install guide
+### How to install
+1. Download the latest release wherever you want to install the application (for example in `/usr/local/ust`).
+2. Update the `files/settings.json` settings file to fit up your needs.
+3. As **root**, install the application with `ust --install` which will setup the server and client instances.
+4. Congrats! The application is ready and working :)
+
+### Settings
+Update the `files/settings.json` settings file to fit up your needs.
+
+- PopupThreshold (in minutes): Set the time frame of anticipation with which a user must be warned about a shutdown event.
+- IgnoreThreshold (in minutes): Set the time frame of anticipation elapsed needed to schedule a shutdown event, so the ones that must happen before that will be ignored (not scheduled).
+- AutocancelThreshold (in minutes): Set the time frame of anticipation elapsed needed to ask for user interaction (rise a pop-up), so the ones that must happen before that will be automatically cancelled (the next shutdown event will be scheduled).
+- Schedule: Array of shutdown events, the nearest shutdown will be the first one to be scheduled (obviously, the past ones will be ignored); if the user cancels one, the next one will be scheduled.
+    - Shutdown (local time): When the shutdown event will be fired.
+    - Mode (pop-up behaviour):
+        - SILENT: No pop-up or warning will be displayed to the user.
+        - INFORMATIVE: The user will be warned about a scheduled shutdown, but no interaction is allowed.
+        - CANCELLABLE: The user will be warned about a scheduled shutdown, and is allowed to cancel the scheduled event (the server will schedule the next one in the list).
+        
+### How to uninstall
+1. As **root**, uninstall the application with `ust --uninstall` and all the settings and changes will be reverted.
+2. Remove the application folder.
+3. That's it! It's sad, but was fun :)
 
 ## How does it work?
-It has been built on a client-server architecture that uses sockets for communication, because it must works properly when a user is logged in (or a set of users are using the same machine) and even when there's no user logged in. 
+It has been built as a client-server application that uses D-Bus for communication, because it must work properly when a set of users are logged (sharing a computer) and also when there's no user logged at all. 
 
-* The server starts:
-** A new shutdown event is scheduled from the given schedule times (inside the `config.py' file).
-** A new communication channel via socket is created and the server waits for the clients to connect in.
+### Architecture
+The application can be split into two main parts:
+1. The server: Works with root permissions as a system.d service defined into `/lib/systemd/system/ust-server.service` launching a self-contained .NET Core 3.1 server-instance application.
+2. The client: Works with user permissions as a regular application defined into `/etc/profile.d/ust-client.sh` launching a self-contained .NET Core 3.1 client-instance application.
 
-* The client starts:
-** The client connects to the server.
-** The server sends to the client the scheduled shutdown time.
-** A new warning event is scheduled from the given schedule time, there are three warning types:
-*** *SILENT*: No warning will be displayed, so the shutdown event will proceed as scheduled.
-*** *INFO*: A warning will be displayed in order to inform the user about the scheduled shutdown time, but its read-only.
-*** *ABORT*: The warning includes an option that allows the user to abort the scheduled shutdown event. If used, the client will communicate the server in order to abort the shudown.
-*** The client will remain connected to the server.
+### Communication process
+- The server starts:
+    - Registers and exposes the interface within D-Bus.    
+    - The nearest (in the future) shutdown event is scheduled from the given schedule times (inside the `files/settings.json` file), if there's no more schedule times for today, it will be scheduled for tomorrow.
+    - Listens for requests through D-Bus using events (no polling needed).
 
-* A shutdown is aborted withing the client due user's interaction:
-** The client will communicate with the server in order to send the abort command.
-** The server will receive the abort command and will proceed to abort the scheduled event.
-** The server will schedule the next shutdown event.
-** The server will send to the connected clients the next scheduled shutdown time.
+- The client starts:
+    - Connects to the server using the D-Bus interface and asks for the current scheduled shutdown event.
+    - Schedules the warning pop-up using the given settings.
+    - Listens for cancellations over the scheduled event on server-side through D-Bus using events (no polling needed).
 
-## How to install
-1. Copy the `UbuntuShutdownTimer` main folder into somewhere accessible by all users.
-2. Create a new service file into the systemd/system folder (for example: `/lib/systemd/system/ust_server.service`).
-3. The content must be as follows:
-```
-[Unit]
-Description=Ubuntu Shutdown Timer
-After=multi-user.target
+- Scenario 1 - An info pop-up rises on client-side:
+    - An scheduled info pop-up rises on client-side (the user cannot cancel it).
+    - No interaction is performed over the server.
+    - The shutdown event rises on server and the computer poweroffs.
 
-[Service]
-ExecStart=/usr/bin/python3 -u /FOLDER/UbuntuShutdownTimer/ust_server.py
-Type=simple
+- Scenario 2 - A cancellable pop-up rises on client-side:
+    - An scheduled cancellable pop-up rises on client-side and the user requests for cancellation.
+    - A cancellation request is performed over the server.
+    - The server accepts the cancellation (validation over scheduled IDs is done to avoid repeated requests from different user sessions).
+    - The server aborts the current shutdown and schedules the next one.
+    - The server sends a signal to all the client to warn them about a cancellation.
+    - The clients (all the connected ones) requests for the new scheduled event.
+    - The client cancels their current pop-ups and schedules the new ones.
 
-[Install]
-WantedBy=multi-user.target
-```
-4. Reload the systemctl daemon with `sudo systemctl daemon-reload`
-5. Enable the new service with `sudo systemctl enable ust_server.service`
-6. Start the service with `sudo systemctl start ust_server.service`
-7. Edit the `~/.profile` file for each user able to login into the computer.
-8. Add a new line at the end as follows:
- ```
- /usr/bin/python3 /FOLDER/UbuntuShutdownTimer/ust_client.py &
- ```
+### The installation process
+1. D-Bus policies: 
+    1. If needed, a new file will be added to `/etc/dbus-1/system-local.conf`.
+    2. The previous file will be modified to allow communication through the `net.xeill.elpuig.UST1` interface for all users.
 
-9. Edit the `shared/config.py` file inside the `UbuntuShutdownTimer` folder:
-    - Setup the shutdwon events (time and type), for example: 
-    `SHUTDOWN_TIMES = [{"time": "14:45:00", "popup": Popup.ABORT}, {"time": "21:15:00", "popup": Popup.SILENT}]` 
-    - All the settings are self-explanatory
+2. Server service:
+    1. A new service will be added to `/lib/systemd/system/ust-server.service`.
+    2. The service will run the application in server mode with root permissions on startup, so all users will find a unique running instance to connect with.
 
+3. Client application:
+    1. A new launcher will be added to `/etc/profile.d/ust-client.sh`.
+    2. The application will run on client mode with user permissions on logon, so all users will connect with the server in order to display pop-ups if needed.
 
-## Greatings and sources:
-* https://pymotw.com/3/socket/tcp.html
-* https://www.geeksforgeeks.org/socket-programming-multi-threading-python/
+4. Reload D-Bus:
+    1. A call to ReloadConfig() will be performed over D-Bus.
+    2. The D-Bus daemon will be forced to reload its config with a HUP signal (as the official documentation suggests).
+
+### The uninstallation process
+1. D-Bus policies: 
+    1. The file `/etc/dbus-1/system-local.conf` won't be removed in order to preserve other configurations.
+    2. The policy entries for the `net.xeill.elpuig.UST1` interface will be removed.
+
+2. Server service:
+    1. The service `/lib/systemd/system/ust-server.service` will be disabled and removed.
+
+3. Client application:
+    1. The launcher `/etc/profile.d/ust-client.sh` will be removed.
+
+4. Reload D-Bus:
+    1. A call to ReloadConfig() will be performed over D-Bus.
+    2. The D-Bus daemon will be forced to reload its config with a HUP signal (as the official documentation suggests).

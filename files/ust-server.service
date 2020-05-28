@@ -1,0 +1,12 @@
+[Unit]
+Description=Ubuntu Shutdown Timer (Server)
+After=multi-user.target
+
+[Service]
+ExecStart={0}ust --server
+WorkingDirectory={0}
+User=root
+Type=simple
+
+[Install]
+WantedBy=multi-user.target
