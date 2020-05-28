@@ -85,7 +85,7 @@ namespace UST
             Console.WriteLine();          
 
             _cancel = new CancellationTokenSource();
-            var time = Math.Max(0, (int)(_current.GetPopupDateTime() - DateTime.Now).TotalMilliseconds);
+            var time = Math.Max(0, (int)(_current.GetPopupDateTime() - DateTimeOffset.Now).TotalMilliseconds);
 
             if(time < _current.AutocancelThreshold) Cancel(true);
             else{

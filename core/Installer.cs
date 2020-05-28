@@ -37,7 +37,7 @@ namespace UST
         private string _serverFolder = "/lib/systemd/system/";
   
         public void Install(){
-            Console.WriteLine("Installation requested: ", DateTime.Now.Year);
+            Console.WriteLine("Installation requested: ");
             InstallDbusPolicies();
             Console.WriteLine();
 
@@ -51,7 +51,7 @@ namespace UST
         }
         
          public void Uninstall(){
-            Console.WriteLine("Uninstallation requested: ", DateTime.Now.Year);
+            Console.WriteLine("Uninstallation requested: ");
             UninstallDbusPolicies();
             Console.WriteLine();
 

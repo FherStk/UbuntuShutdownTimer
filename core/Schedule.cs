@@ -48,16 +48,16 @@ namespace UST
             return $"  - GUID: {GUID.ToString()} \n  - Mode: {Mode.ToString()}\n  - Shutdown on: {GetShutdownDateTime().ToString()}\n  - Popup on: {GetPopupDateTime().ToString()}";
         }
 
-        public void SetShutdownDateTime(DateTime dt){
+        public void SetShutdownDateTime(DateTimeOffset dt){
             Shutdown = dt.ToString();
         }
 
-        public DateTime GetShutdownDateTime(){
-            return DateTime.Parse(Shutdown);
+        public DateTimeOffset GetShutdownDateTime(){
+            return DateTimeOffset.Parse(Shutdown);
         }
 
-        public DateTime GetPopupDateTime(){
-            return DateTime.Parse(Shutdown).AddMinutes(-this.PopupThreshold);
+        public DateTimeOffset GetPopupDateTime(){
+            return DateTimeOffset.Parse(Shutdown).AddMinutes(-this.PopupThreshold);
         }
 
         public void Dispose(){

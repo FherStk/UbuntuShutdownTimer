@@ -29,7 +29,7 @@ namespace UST
         public static string AppFolder{
             get{
                 var path = AppContext.BaseDirectory;
-                if(path.Contains("/bin/")) path = path.Substring(0, path.IndexOf("bin"));                
+                if(path.Contains("\\bin\\")) path = path.Substring(0, path.IndexOf("\\bin\\"));                
                 return path;
             }
         } 

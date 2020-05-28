@@ -52,8 +52,8 @@ namespace UST
         }                 
 
         public Server(){
-            var now = DateTime.Now;       
-            var json = JsonSerializer.Deserialize<Settings>(File.ReadAllText(System.IO.Path.Combine(Utils.AppFolder, "settings", "settings.json")));
+            var now = DateTimeOffset.Now;       
+            var json = JsonSerializer.Deserialize<Settings>(File.ReadAllText(Utils.GetFilePath("settings.json", "settings")));
             if(json.Schedule.Length == 0) throw new Exception("No data has been provided, please fill the setting.json file.");  
 
             _index = -1;
@@ -65,7 +65,7 @@ namespace UST
                 x.PopupThreshold = json.PopupThreshold;    
                 x.IgnoreThreshold = json.IgnoreThreshold;
                 x.AutocancelThreshold = json.AutocancelThreshold;
-                x.SetShutdownDateTime(new DateTime(now.Year, now.Month, now.Day, dt.Hour, dt.Minute, dt.Second));
+                x.SetShutdownDateTime(new DateTimeOffset(now.Year, now.Month, now.Day, dt.Hour, dt.Minute, dt.Second, new TimeSpan()));
             });                  
         }
 
@@ -108,7 +108,7 @@ namespace UST
             }
 
             //Get the next schedule
-            var now = DateTime.Now;
+            var now = DateTimeOffset.Now;
             for(_index = _index+1; _index < _data.Count(); _index++){                
                 if((Current.GetShutdownDateTime() - now).TotalMinutes > Current.IgnoreThreshold) break;
             }
@@ -123,7 +123,7 @@ namespace UST
             }
             
             //###### INIT DEVEL (REMOVE ON PRODUCTION) ######
-            //Current.SetShutdownDateTime(DateTime.Now.AddMinutes(2));
+            //Current.SetShutdownDateTime(DateTimeOffset.Now.AddMinutes(2));
             //Current.PopupTimeframe = 1;
             //Current.Mode = ScheduleMode.INFORMATIVE;
             //###### END  DEVEL (REMOVE ON PRODUCTION) ######
