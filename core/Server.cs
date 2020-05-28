@@ -123,9 +123,9 @@ namespace UST
             }
             
             //###### INIT DEVEL (REMOVE ON PRODUCTION) ######
-            //Current.SetShutdownDateTime(DateTimeOffset.Now.AddMinutes(2));
-            //Current.PopupTimeframe = 1;
-            //Current.Mode = ScheduleMode.INFORMATIVE;
+            Current.SetShutdownDateTime(DateTimeOffset.Now.AddMinutes(2));
+            Current.PopupThreshold = 1;
+            Current.Mode = ScheduleMode.INFORMATIVE;
             //###### END  DEVEL (REMOVE ON PRODUCTION) ######
             
             _cancel = new CancellationTokenSource();
