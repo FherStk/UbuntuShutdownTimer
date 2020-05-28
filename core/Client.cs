@@ -85,11 +85,11 @@ namespace UST
             Console.WriteLine();          
 
             _cancel = new CancellationTokenSource();
-            var time = Math.Max(0, (int)(_current.GetPopupDateTime() - DateTimeOffset.Now).TotalMilliseconds);
+            var time = Math.Max(0, (int)(_current.GetPopupDateTime() - DateTimeOffset.Now).TotalSeconds);
 
             if(time < _current.AutocancelThreshold) Cancel(true);
             else{
-                Task.Delay(time, _cancel.Token).ContinueWith(t =>
+                Task.Delay(time*1000, _cancel.Token).ContinueWith(t =>
                 {
                     if(!t.IsCanceled){
                         Console.WriteLine("Rising the current scheduled popup: ");  
