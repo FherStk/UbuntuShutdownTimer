@@ -121,8 +121,10 @@ namespace UST
                 // Current.Mode = ScheduleMode.INFORMATIVE;
 
                 //For regular testing
-                Current.SetShutdownDateTime(DateTimeOffset.Now.AddMinutes(7));  
-                Current.PopupThreshold = 5;                                     
+                Current.SetShutdownDateTime(DateTimeOffset.Now.AddMinutes(1));  
+                Current.PopupThreshold = 1;     
+                Current.IgnoreThreshold = 0;
+                Current.AutocancelThreshold = 0;                                                
                 Current.Mode = ScheduleMode.INFORMATIVE;
                                 
                 //###### END  DEVEL (REMOVE ON PRODUCTION) ######
@@ -146,8 +148,13 @@ namespace UST
                     Console.WriteLine("Shutting down the computer for the current scheduled event:");
                     Console.WriteLine(Current.ToString());
                     Console.WriteLine();
-                    //Console.WriteLine("SHUTDOWN!");  
-                    Utils.RunShellCommand("poweroff", true);
+                    //### PRODUCTION ###
+                    //Utils.RunShellCommand("poweroff", true);
+
+                    //### TEST ###
+                    Console.WriteLine("SHUTDOWN!");  
+
+                    
                 }
             });
             

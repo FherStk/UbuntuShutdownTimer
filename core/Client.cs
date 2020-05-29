@@ -133,7 +133,8 @@ namespace UST
             Console.WriteLine();
            
             _dbus.CancelScheduleAsync(_current.GUID);
-            if(!auto) Utils.RunShellCommand("zenity --notification --text=\"Heu cancel·lat l'aturada automàtica de l'equip, si us plau, \n<b>recordeu aturar-la manualment</b> quan acabeu de fer-la servir.\"");
+            //if(!auto) Utils.RunShellCommand("zenity --notification --text=\"Heu cancel·lat l'aturada automàtica de l'equip, si us plau, \n<b>recordeu aturar-la manualment</b> quan acabeu de fer-la servir.\"");  //unable to set timeout
+            if(!auto) Utils.RunShellCommand("notify-send -u critical -t 0 \"Atenció:\" \"Heu cancel·lat l'aturada automàtica de l'equip, si us plau, <b>recordeu aturar-lo manualment</b> quan acabeu de fer-lo servir.\"");
         }
 
         private void Continue(){
@@ -141,8 +142,8 @@ namespace UST
             Console.WriteLine(_current.ToString());  
             Console.WriteLine();
 
-            _dbus.CancelScheduleAsync(_current.GUID);
-            Utils.RunShellCommand("zenity --notification --text=\"\nL'equip <b>s'aturarà</b> automàticament en breus moments...\"");
+            //Utils.RunShellCommand("zenity --notification --text=\"\nL'equip <b>s'aturarà</b> automàticament en breus moments...\""); //unable to set timeout
+            Utils.RunShellCommand("notify-send -u critical -t 0 \"\" \"L'equip <b>s'aturarà</b> automàticament en breus moments...\"");
         }
 
         private void Silent(){
