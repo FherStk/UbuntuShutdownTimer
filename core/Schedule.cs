@@ -53,11 +53,13 @@ namespace UST
         }
 
         public DateTimeOffset GetShutdownDateTime(){
-            return DateTimeOffset.Parse(Shutdown);
+            var parsed = DateTimeOffset.Parse(Shutdown);            
+            return new DateTimeOffset(parsed.Year, parsed.Month, parsed.Day, parsed.Hour, parsed.Minute, parsed.Second, DateTimeOffset.Now.Offset);
         }
 
         public DateTimeOffset GetPopupDateTime(){
-            return DateTimeOffset.Parse(Shutdown).AddMinutes(-this.PopupThreshold);
+            var parsed = DateTimeOffset.Parse(Shutdown).AddMinutes(-this.PopupThreshold);            
+            return new DateTimeOffset(parsed.Year, parsed.Month, parsed.Day, parsed.Hour, parsed.Minute, parsed.Second, DateTimeOffset.Now.Offset);
         }
 
         public void Dispose(){
