@@ -26,14 +26,6 @@ using System.Threading.Tasks;
 namespace UST
 {   
     //Publish: dotnet publish -r linux-x64 -c Release
-    //TODO:
-    //  Test datetime offset
-    //  Test auto-cancel (is not working properly)
-    //  Test different schedules kinds
-    //  Test no-loggin shutdown
-    //  Test loggin shutdown
-    //  Test multi-account behaviour
-    
     class ust
     {
         static async Task Main(string[] args)
