@@ -87,7 +87,6 @@ namespace UST
                 
                 Next();
 
-                Console.WriteLine();
                 Console.WriteLine("Server ready and listening!"); 
                 Console.WriteLine();            
                                                 
@@ -101,7 +100,7 @@ namespace UST
             //Cancel the current scheduled shutdown
             if(_cancel != null){                
                 Console.WriteLine($"A client requests for cancellation over the current scheduled shutdown:");  
-                Console.WriteLine(Current.ToString());
+                Console.WriteLine(Current.ToString());  //Current wont be null when cancelling
                 Console.WriteLine();
                 
                 _cancel.Cancel();
@@ -110,6 +109,24 @@ namespace UST
             //Get the next schedule
             var now = DateTimeOffset.Now;
             for(_index = _index+1; _index < _data.Count(); _index++){                
+                //###### INIT DEVEL (REMOVE ON PRODUCTION) ######
+                //For ignore testing (becuase the shutdown event is too close)
+                // Current.SetShutdownDateTime(DateTimeOffset.Now.AddMinutes(1));  
+                // Current.PopupThreshold = 1;                                     
+                // Current.Mode = ScheduleMode.INFORMATIVE;
+
+                //For auto-cancel testing
+                // Current.SetShutdownDateTime(DateTimeOffset.Now.AddMinutes(15));  
+                // Current.PopupThreshold = 14;                                     
+                // Current.Mode = ScheduleMode.INFORMATIVE;
+
+                //For regular testing
+                // Current.SetShutdownDateTime(DateTimeOffset.Now.AddMinutes(7));  
+                // Current.PopupThreshold = 5;                                     
+                // Current.Mode = ScheduleMode.INFORMATIVE;
+                                
+                //###### END  DEVEL (REMOVE ON PRODUCTION) ######
+                
                 if((Current.GetShutdownDateTime() - now).TotalMinutes > Current.IgnoreThreshold) break;
             }
 
@@ -121,12 +138,6 @@ namespace UST
                     x.SetShutdownDateTime(x.GetShutdownDateTime().AddDays(1));                    
                 });                                
             }
-            
-            //###### INIT DEVEL (REMOVE ON PRODUCTION) ######
-            Current.SetShutdownDateTime(DateTimeOffset.Now.AddMinutes(2));
-            Current.PopupThreshold = 1;
-            Current.Mode = ScheduleMode.INFORMATIVE;
-            //###### END  DEVEL (REMOVE ON PRODUCTION) ######
             
             _cancel = new CancellationTokenSource();
             Task.Delay((int)(Current.GetShutdownDateTime() - now).TotalMilliseconds, _cancel.Token).ContinueWith(t =>
@@ -142,6 +153,7 @@ namespace UST
             
             Console.WriteLine($"A new shutdown event has been successfully scheduled:");                
             Console.WriteLine(Current.ToString());
+            Console.WriteLine();
 
             return Current;
         }

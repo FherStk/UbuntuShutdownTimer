@@ -85,11 +85,11 @@ namespace UST
             Console.WriteLine();          
 
             _cancel = new CancellationTokenSource();
-            var time = Math.Max(0, (int)(_current.GetPopupDateTime() - DateTimeOffset.Now).TotalSeconds);
+            var minutes = Math.Max(0, (int)(_current.GetPopupDateTime() - DateTimeOffset.Now).TotalMinutes);
 
-            if(time < _current.AutocancelThreshold) Cancel(true);
+            if(minutes < _current.AutocancelThreshold) Cancel(true);
             else{
-                Task.Delay(time*1000, _cancel.Token).ContinueWith(t =>
+                Task.Delay(minutes*60000, _cancel.Token).ContinueWith(t =>
                 {
                     if(!t.IsCanceled){
                         Console.WriteLine("Rising the current scheduled popup: ");  
@@ -133,7 +133,7 @@ namespace UST
             Console.WriteLine();
            
             _dbus.CancelScheduleAsync(_current.GUID);
-            Utils.RunShellCommand("zenity --notification --text=\"Heu cancel·lat l'aturada automàtica de l'equip, si us plau, \n<b>recordeu aturar-la manualment</b> quan acabeu de fer-la servir.\"");
+            if(!auto) Utils.RunShellCommand("zenity --notification --text=\"Heu cancel·lat l'aturada automàtica de l'equip, si us plau, \n<b>recordeu aturar-la manualment</b> quan acabeu de fer-la servir.\"");
         }
 
         private void Continue(){
