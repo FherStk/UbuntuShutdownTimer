@@ -121,9 +121,9 @@ namespace UST
                 // Current.Mode = ScheduleMode.INFORMATIVE;
 
                 //For regular testing
-                // Current.SetShutdownDateTime(DateTimeOffset.Now.AddMinutes(7));  
-                // Current.PopupThreshold = 5;                                     
-                // Current.Mode = ScheduleMode.INFORMATIVE;
+                Current.SetShutdownDateTime(DateTimeOffset.Now.AddMinutes(7));  
+                Current.PopupThreshold = 5;                                     
+                Current.Mode = ScheduleMode.INFORMATIVE;
                                 
                 //###### END  DEVEL (REMOVE ON PRODUCTION) ######
                 
