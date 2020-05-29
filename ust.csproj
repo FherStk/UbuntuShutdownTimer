@@ -8,8 +8,8 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Tmds.DBus" Version="0.8.0" />
-    <Content Include="files\**" CopyToPublishDirectory="PreserveNewest"/>
-    <Content Include="settings\**" CopyToPublishDirectory="PreserveNewest"/>
+    <Content Include="files\**" CopyToOutputDirectory ="PreserveNewest" CopyToPublishDirectory="PreserveNewest"/>
+    <Content Include="settings\**" CopyToOutputDirectory ="PreserveNewest" CopyToPublishDirectory="PreserveNewest"/>
   </ItemGroup>
 
 </Project>

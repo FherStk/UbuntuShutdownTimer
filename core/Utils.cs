@@ -25,18 +25,9 @@ using System.Diagnostics;
 
 namespace UST
 { 
-    public static class Utils{
-        public static string AppFolder{
-            get{
-                var path = AppContext.BaseDirectory;
-                if(path.Contains("\\bin\\")) path = path.Substring(0, path.IndexOf("\\bin\\"));
-                else if(path.Contains("/bin/")) path = path.Substring(0, path.IndexOf("/bin/"));
-                return path;
-            }
-        } 
-
+    public static class Utils{       
         public static string GetFilePath(string filename, string folder = "files"){ 
-            return Path.Combine(Utils.AppFolder, folder, filename);           
+            return Path.Combine(AppContext.BaseDirectory, folder, filename);           
         } 
         
         public static string RunShellCommand(string cmd, bool silent = false){
