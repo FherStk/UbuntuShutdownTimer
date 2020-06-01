@@ -41,21 +41,13 @@ namespace UST
                     FileName = "/bin/bash",
                     Arguments = $"-c \"{escapedArgs}\"",
                     RedirectStandardOutput = true,
-                    RedirectStandardError = true,
                     UseShellExecute = false,
                     CreateNoWindow = true,                        
                 }
             };
                                     
             process.Start();            
-            
-            //bool error = false;
-            //var result = string.Empty;
-            //while (!error || !process.StandardOutput.EndOfStream) {
-            //    result += process.StandardOutput.ReadLine();
-            //    error = !string.IsNullOrEmpty(process.StandardError.ReadLine());
-            //}
-            //TODO: read line std and append; read line from err and end if some.
+                        
             string result = process.StandardOutput.ReadToEnd();
             process.WaitForExit();
 

@@ -9,8 +9,11 @@
         echo $i
         sleep $p
     done
-) |
-zenity --progress --title="$2" --text="$3" --percentage=0 --auto-close --width=365 --height=150 $4 
+) 2> /dev/null | zenity --progress --title="$2" --text="$3" --percentage=0 --auto-close --width=365 --height=150 $4 &
+
+# get zenity process id
+PID_ZENITY=${!}
+wait $PID_ZENITY
 
 if [ "$?" = 1 ] ; then
     echo "CANCEL"
