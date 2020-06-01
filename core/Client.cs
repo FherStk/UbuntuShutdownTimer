@@ -143,7 +143,7 @@ namespace UST
             Console.WriteLine();
 
             //Utils.RunShellCommand("zenity --notification --text=\"\nL'equip <b>s'aturarà</b> automàticament en breus moments...\""); //unable to set timeout
-            Utils.RunShellCommand("notify-send -u critical -t 0 \"\" \"L'equip <b>s'aturarà</b> automàticament en breus moments...\"");
+            Utils.RunShellCommand("notify-send -u critical -t 0 \"Atenció:\" \"L'equip <b>s'aturarà</b> automàticament en breus moments...\"");
         }
 
         private void Silent(){

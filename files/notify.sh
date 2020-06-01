@@ -1,5 +1,8 @@
 #!/bin/bash
 (
+    set -e
+    set -o pipefail
+
     i=0
     p=$(echo $1/100 | bc -l)
 
@@ -9,11 +12,7 @@
         echo $i
         sleep $p
     done
-) 2> /dev/null | zenity --progress --title="$2" --text="$3" --percentage=0 --auto-close --width=365 --height=150 $4 &
-
-# get zenity process id
-PID_ZENITY=${!}
-wait $PID_ZENITY
+) 2> /dev/null | zenity --progress --title="$2" --text="$3" --percentage=0 --auto-close --width=365 --height=150 $4
 
 if [ "$?" = 1 ] ; then
     echo "CANCEL"
