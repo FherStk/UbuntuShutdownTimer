@@ -14,6 +14,6 @@
         }
     ],
     "PopupThreshold": 15,
-    "IgnoreThreshold": 0,
-    "AutocancelThreshold": 0
+    "IgnoreThreshold": 5,
+    "AutocancelThreshold": 1
 }
