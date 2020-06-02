@@ -149,10 +149,10 @@ namespace UST
                     Console.WriteLine();
                     
                     //### PRODUCTION ###
-                    //Utils.RunShellCommand("poweroff", true);
+                    Utils.RunShellCommand("poweroff", true);
 
                     //### TEST ###
-                    Console.WriteLine("SHUTDOWN!");  
+                    //Console.WriteLine("SHUTDOWN!");  
                 }
             });
             
