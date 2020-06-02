@@ -104,7 +104,7 @@ namespace UST
         private void Question(){
             var title = "Aturada automàtica de l'equip";
             var message = $"Aquest equip te programada una aturada automàtica a les <b>{_current.GetShutdownDateTime().TimeOfDay.ToString()}</b>.\n\nSi su plau, desi els treballs en curs i tanqui totes les aplicacions";
-            var timeout = (int)(_current.GetShutdownDateTime() - DateTimeOffset.Now).Seconds;
+            var timeout = (int)(_current.GetShutdownDateTime() - DateTimeOffset.Now).TotalSeconds;
             var cancel = string.Empty;
 
             switch(_current.Mode){                       
