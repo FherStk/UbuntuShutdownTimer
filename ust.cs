@@ -63,13 +63,5 @@ namespace UST
             Console.WriteLine("  --install       Installs the application (needs root permissions).");            
             Console.WriteLine("  --uninstall     Uninstalls the application (needs root permissions).");            
         }
-
-        
-
-        
-        
-        
-
-        
     }
 }
