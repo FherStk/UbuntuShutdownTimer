@@ -21,6 +21,7 @@
 
 using System;
 using System.IO;
+using System.Threading.Tasks;
 using System.Diagnostics;
 
 namespace UST
@@ -46,12 +47,38 @@ namespace UST
                 }
             };
                                     
-            process.Start();            
-                        
+            process.Start();                        
             string result = process.StandardOutput.ReadToEnd();
             process.WaitForExit();
 
             return result;
+        }
+
+        public static int RunShellCommand(string cmd, Action<string> callback, bool silent = false){
+            var escapedArgs = cmd.Replace("\"", "\\\"");
+            if(silent) escapedArgs += "> /dev/null 2>&1 &";
+
+            var process = new Process()
+            {                
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "/bin/bash",
+                    Arguments = $"-c \"{escapedArgs}\"",
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,                        
+                }
+            };
+                                    
+            process.Start(); 
+            var t = new Task(() =>{
+                string result = process.StandardOutput.ReadToEnd();
+                process.WaitForExit();
+
+                callback.Invoke(result);
+            });
+
+            return process.Id;
         }
     }
 }

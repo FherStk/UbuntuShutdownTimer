@@ -30,11 +30,11 @@ namespace UST
 {   
     class Client
     {
-        private CancellationTokenSource _cancel;
-
-        private Schedule _current;
+        private CancellationTokenSource _cancel;        
         
         private IUST1 _dbus;
+
+        private int _pid;
         
         public Client(){            
         }
@@ -48,27 +48,23 @@ namespace UST
                 
                 Console.Write("  Conneting to dbus interface...       ");
                 _dbus = connection.CreateProxy<IUST1>(UST1.DBus.Worker.Service, UST1.DBus.Worker.Path);
-                Console.WriteLine("OK");                
+                Console.WriteLine("OK"); 
+
+                Console.WriteLine("Requesting for the current shutdown event data:");
+                var current = await _dbus.RequestScheduleAsync();            
+                Console.WriteLine(current.ToString());
+                Console.WriteLine();               
 
                 Console.Write("  Subscribing to dbus notifications... ");
-                await _dbus.WatchChangesAsync((sn) => {
-                    Console.WriteLine("The server cancelled the current scheduled popup:"); 
-                    Console.WriteLine(_current.ToString());  
-                    Console.WriteLine();
-                                    
-                    _cancel.Cancel();   
-                    _current = sn;             
-                    SchedulePopup();  
+                await _dbus.WatchChangesAsync((next) => {
+                    _cancel.Cancel();     
+                    ServerCancel(current);                                                               
+                    SchedulePopup(next);  
                 });
                 Console.WriteLine("OK");  
                 Console.WriteLine();
-            
-                Console.WriteLine("Requesting for the current shutdown event data:");
-                _current = await _dbus.RequestScheduleAsync();            
-                Console.WriteLine(_current.ToString());
-                Console.WriteLine();
                 
-                SchedulePopup();
+                SchedulePopup(current);
 
                 Console.WriteLine("Client ready and waiting!"); 
                 Console.WriteLine();  
@@ -79,74 +75,87 @@ namespace UST
             }    
         }     
 
-        private void SchedulePopup(){                    
+        private void SchedulePopup(Schedule current){                    
             Console.WriteLine("Schedulling a new popup: ");
-            Console.WriteLine(_current.ToString());
+            Console.WriteLine(current.ToString());
             Console.WriteLine();          
 
             _cancel = new CancellationTokenSource();
-            var minutes = Math.Max(0, (int)(_current.GetPopupDateTime() - DateTimeOffset.Now).TotalMinutes);
+            var minutes = Math.Max(0, (int)(current.GetPopupDateTime() - DateTimeOffset.Now).TotalMinutes);
 
-            if(minutes < _current.AutocancelThreshold) Cancel(true);
+            if(minutes < current.AutocancelThreshold) UserCancel(current, true);
             else{
                 Task.Delay(minutes*60000, _cancel.Token).ContinueWith(t =>
                 {
                     if(!t.IsCanceled){
                         Console.WriteLine("Rising the current scheduled popup: ");  
-                        Console.WriteLine(_current.ToString());  
+                        Console.WriteLine(current.ToString());  
                         Console.WriteLine();                                              
-                        Question();
+                        Question(current);
                     }
                 });        
             }
         }
 
-        private void Question(){
+        private void Question(Schedule current){
             var title = "Aturada automàtica de l'equip";
-            var message = $"Aquest equip te programada una aturada automàtica a les <b>{_current.GetShutdownDateTime().TimeOfDay.ToString()}</b>.\n\nSi su plau, desi els treballs en curs i tanqui totes les aplicacions";
-            var timeout = (int)(_current.GetShutdownDateTime() - DateTimeOffset.Now).TotalSeconds;
+            var message = $"Aquest equip te programada una aturada automàtica a les <b>{current.GetShutdownDateTime().TimeOfDay.ToString()}</b>.\n\nSi su plau, desi els treballs en curs i tanqui totes les aplicacions";
+            var timeout = (int)(current.GetShutdownDateTime() - DateTimeOffset.Now).TotalSeconds;
 
-            switch(_current.Mode){                       
+            switch(current.Mode){                       
                 case ScheduleMode.INFORMATIVE:                                               
-                    Utils.RunShellCommand($"{Utils.GetFilePath("notify.sh")} {timeout} \"{title}\" \"{message}.\" --no-cancel");                
-                    Continue();
+                    _pid = Utils.RunShellCommand($"{Utils.GetFilePath("notify.sh")} {timeout} \"{title}\" \"{message}.\" --no-cancel", new Action<string>((result) => {                        
+                        UserAccept(current);
+                    }));
                     break;
 
-                case ScheduleMode.CANCELLABLE:                    
-                    var result = Utils.RunShellCommand($"{Utils.GetFilePath("notify.sh")} {timeout} \"{title}\" \"{message} o premi 'cancel·lar' per anul·lar l'aturada automàtca de l'equip.\"");                
-                    if(result.StartsWith("ACCEPT")) Continue();
-                    else Cancel();                                             
+                case ScheduleMode.CANCELLABLE:   
+                    _pid = Utils.RunShellCommand($"{Utils.GetFilePath("notify.sh")} {timeout} \"{title}\" \"{message} o premi 'cancel·lar' per anul·lar l'aturada automàtca de l'equip.\"", new Action<string>((result) => {
+                        if(result.StartsWith("ACCEPT")) UserAccept(current);
+                        else UserCancel(current);        
+                    }));                    
                     break;
 
                 case ScheduleMode.SILENT:
-                    Silent();
+                    UserSilent(current);
                     break;
             }
         }
 
-        private void Cancel(bool auto = false){
+        private void UserCancel(Schedule current, bool auto = false){
+            _pid = 0;
+            
             Console.WriteLine($"{(auto ? "Auto-cancellation request" : "The user requests for cancellation" )} over the current scheduled shutdown:"); 
-            Console.WriteLine(_current.ToString());  
+            Console.WriteLine(current.ToString());  
             Console.WriteLine();
            
-            _dbus.CancelScheduleAsync(_current.GUID);
+            _dbus.CancelScheduleAsync(current.GUID);
             if(!auto) Utils.RunShellCommand("notify-send -u critical -t 0 \"Atenció:\" \"Heu cancel·lat l'aturada automàtica de l'equip, si us plau, <b>recordeu aturar-lo manualment</b> quan acabeu de fer-lo servir.\"");
-        }
+        }        
 
-        private void Continue(){
+        private void UserAccept(Schedule current){
+            _pid = 0;
+
             Console.WriteLine("The user accepts the current scheduled shutdown:");
-            Console.WriteLine(_current.ToString());  
+            Console.WriteLine(current.ToString());  
             Console.WriteLine();
 
             Utils.RunShellCommand("notify-send -u critical -t 0 \"Atenció:\" \"L'equip <b>s'aturarà</b> automàticament en breus moments...\"");
         }
 
-        private void Silent(){
+        private void UserSilent(Schedule current){
             Console.WriteLine("The current scheduled shutdown is runing on silent mode:"); 
-            Console.WriteLine(_current.ToString());  
+            Console.WriteLine(current.ToString());  
             Console.WriteLine();
-           
-            _dbus.CancelScheduleAsync(_current.GUID);
+        }
+
+        private void ServerCancel(Schedule current){
+            Console.WriteLine("The server cancelled the current scheduled popup:"); 
+            Console.WriteLine(current.ToString());  
+            Console.WriteLine();
+
+            if(_pid > 0) Utils.RunShellCommand($"kill -9 {_pid}");
+            Utils.RunShellCommand("notify-send -u critical -t 0 \"Atenció:\" \"Un altre usuari ha cancel·lat l'aturada automàtica de l'equip, si us plau, <b>recordeu aturar-lo manualment</b> quan acabeu de fer-lo servir.\"");
         }
     }
 }
