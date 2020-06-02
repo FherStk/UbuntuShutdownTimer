@@ -105,25 +105,22 @@ namespace UST
             var title = "Aturada automàtica de l'equip";
             var message = $"Aquest equip te programada una aturada automàtica a les <b>{_current.GetShutdownDateTime().TimeOfDay.ToString()}</b>.\n\nSi su plau, desi els treballs en curs i tanqui totes les aplicacions";
             var timeout = (int)(_current.GetShutdownDateTime() - DateTimeOffset.Now).TotalSeconds;
-            var cancel = string.Empty;
 
             switch(_current.Mode){                       
-                case ScheduleMode.INFORMATIVE:                           
-                    message += ".";
-                    cancel += "--no-cancel";     
+                case ScheduleMode.INFORMATIVE:                                               
+                    Utils.RunShellCommand($"{Utils.GetFilePath("notify.sh")} {timeout} \"{title}\" \"{message}.\" --no-cancel");                
+                    Continue();
                     break;
 
-                case ScheduleMode.CANCELLABLE:
-                    message += " o premi 'cancel·lar' per anul·lar l'aturada automàtca de l'equip.";                                                  
+                case ScheduleMode.CANCELLABLE:                    
+                    var result = Utils.RunShellCommand($"{Utils.GetFilePath("notify.sh")} {timeout} \"{title}\" \"{message} o premi 'cancel·lar' per anul·lar l'aturada automàtca de l'equip.\"");                
+                    if(result.StartsWith("ACCEPT")) Continue();
+                    else Cancel();                                             
                     break;
-            }
 
-            if(_current.Mode == ScheduleMode.SILENT) Silent();
-            else
-            {                       
-                var result = Utils.RunShellCommand($"{Utils.GetFilePath("notify.sh")} {timeout} \"{title}\" \"{message}\" {cancel}");                
-                if(result.StartsWith("ACCEPT")) Continue();
-                else Cancel();
+                case ScheduleMode.SILENT:
+                    Silent();
+                    break;
             }
         }
 
@@ -133,7 +130,6 @@ namespace UST
             Console.WriteLine();
            
             _dbus.CancelScheduleAsync(_current.GUID);
-            //if(!auto) Utils.RunShellCommand("zenity --notification --text=\"Heu cancel·lat l'aturada automàtica de l'equip, si us plau, \n<b>recordeu aturar-la manualment</b> quan acabeu de fer-la servir.\"");  //unable to set timeout
             if(!auto) Utils.RunShellCommand("notify-send -u critical -t 0 \"Atenció:\" \"Heu cancel·lat l'aturada automàtica de l'equip, si us plau, <b>recordeu aturar-lo manualment</b> quan acabeu de fer-lo servir.\"");
         }
 
@@ -142,7 +138,6 @@ namespace UST
             Console.WriteLine(_current.ToString());  
             Console.WriteLine();
 
-            //Utils.RunShellCommand("zenity --notification --text=\"\nL'equip <b>s'aturarà</b> automàticament en breus moments...\""); //unable to set timeout
             Utils.RunShellCommand("notify-send -u critical -t 0 \"Atenció:\" \"L'equip <b>s'aturarà</b> automàticament en breus moments...\"");
         }
 
