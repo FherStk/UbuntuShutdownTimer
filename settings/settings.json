@@ -1,7 +1,7 @@
 {    
     "Schedule": [
         {
-            "Shutdown": "12:00:00.000Z",
+            "Shutdown": "00:00:00.000Z",
             "Mode": "INFORMATIVE"
         },
         {
