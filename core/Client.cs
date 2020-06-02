@@ -35,6 +35,7 @@ namespace UST
         private IUST1 _dbus;
 
         private int _pid;
+        private bool _ignore;
         
         public Client(){            
         }
@@ -57,8 +58,8 @@ namespace UST
 
                 Console.Write("  Subscribing to dbus notifications... ");
                 await _dbus.WatchChangesAsync((next) => {
-                    _cancel.Cancel();     
-                    ServerCancel(current);                                                               
+                    if(_cancel != null) _cancel.Cancel();                         
+                    ServerCancel(current);                                        
                     SchedulePopup(next);  
                 });
                 Console.WriteLine("OK");  
@@ -81,10 +82,10 @@ namespace UST
             Console.WriteLine();          
 
             _cancel = new CancellationTokenSource();
-            var minutes = Math.Max(0, (int)(current.GetPopupDateTime() - DateTimeOffset.Now).TotalMinutes);
-
+            var minutes = Math.Max(0, (int)(current.GetShutdownDateTime() - DateTimeOffset.Now).TotalMinutes);
             if(minutes < current.AutocancelThreshold) UserCancel(current, true);
             else{
+                minutes = Math.Max(0, (int)(current.GetPopupDateTime() - DateTimeOffset.Now).TotalMinutes);
                 Task.Delay(minutes*60000, _cancel.Token).ContinueWith(t =>
                 {
                     if(!t.IsCanceled){
@@ -124,7 +125,8 @@ namespace UST
 
         private void UserCancel(Schedule current, bool auto = false){
             _pid = 0;
-            
+            _ignore = true;
+
             Console.WriteLine($"{(auto ? "Auto-cancellation request" : "The user requests for cancellation" )} over the current scheduled shutdown:"); 
             Console.WriteLine(current.ToString());  
             Console.WriteLine();
@@ -136,11 +138,14 @@ namespace UST
         private void UserAccept(Schedule current){
             _pid = 0;
 
-            Console.WriteLine("The user accepts the current scheduled shutdown:");
-            Console.WriteLine(current.ToString());  
-            Console.WriteLine();
+            if(_ignore) _ignore = false;
+            else{
+                Console.WriteLine("The user accepts the current scheduled shutdown:");
+                Console.WriteLine(current.ToString());  
+                Console.WriteLine();
 
-            Utils.RunShellCommand("notify-send -u critical -t 0 \"Atenció:\" \"L'equip <b>s'aturarà</b> automàticament en breus moments...\"");
+                Utils.RunShellCommand("notify-send -u critical -t 0 \"Atenció:\" \"L'equip <b>s'aturarà</b> automàticament en breus moments...\"");
+            }
         }
 
         private void UserSilent(Schedule current){
@@ -149,13 +154,31 @@ namespace UST
             Console.WriteLine();
         }
 
-        private void ServerCancel(Schedule current){
-            Console.WriteLine("The server cancelled the current scheduled popup:"); 
-            Console.WriteLine(current.ToString());  
-            Console.WriteLine();
+        private void ServerCancel(Schedule current){  
+            if(_ignore) _ignore = false;
+            else{                      
+                Console.WriteLine("The server cancelled the current scheduled popup:"); 
+                Console.WriteLine(current.ToString());  
+                Console.WriteLine();
 
-            if(_pid > 0) Utils.RunShellCommand($"kill -9 {_pid}");
-            Utils.RunShellCommand("notify-send -u critical -t 0 \"Atenció:\" \"Un altre usuari ha cancel·lat l'aturada automàtica de l'equip, si us plau, <b>recordeu aturar-lo manualment</b> quan acabeu de fer-lo servir.\"");
+                if(_pid > 0){
+                    _ignore = true;                    
+
+                    try{
+                        //Find our zenity instance (not 100% reliable)
+                        _pid = int.Parse(Utils.RunShellCommand($"ps -e | awk '$4 == \"zenity\" && $1 >= \"{_pid}\"' | head -n 1 | awk '{{print $1}}'"));
+                        Utils.RunShellCommand($"kill -9 {_pid}");
+                    }
+                    catch{
+                        Utils.RunShellCommand($"pkill -9 zenity");
+                    }
+                    finally{
+                        _pid = 0;    
+                    }
+                } 
+                
+                Utils.RunShellCommand("notify-send -u critical -t 0 \"Atenció:\" \"Un altre usuari ha cancel·lat l'aturada automàtica de l'equip, si us plau, <b>recordeu aturar-lo manualment</b> quan acabeu de fer-lo servir.\"");
+            }
         }
     }
 }
