@@ -7,7 +7,7 @@
     <!--<Configuration>Release</Configuration>-->
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Tmds.DBus" Version="0.8.0" />
+    <PackageReference Include="Tmds.DBus" Version="0.92.0" />
     <Content Include="files\**" CopyToOutputDirectory ="PreserveNewest" CopyToPublishDirectory="PreserveNewest"/>
     <Content Include="settings\**" CopyToOutputDirectory ="PreserveNewest" CopyToPublishDirectory="PreserveNewest"/>
   </ItemGroup>
